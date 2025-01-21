@@ -1,3 +1,6 @@
+#pragma once
+
+#include <cstdint>
 
 class Application
 {
@@ -5,5 +8,9 @@ class Application
         Application();
         ~Application();
 
+        void processInput();
+        
     protected:
+
+    uint16_t mProgramCounter {};
 };
