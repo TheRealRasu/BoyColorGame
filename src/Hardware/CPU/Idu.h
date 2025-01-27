@@ -2,10 +2,14 @@
 
 #include <cstdint>
 
+/*  @ingroup CPU
+
+    class that exclusive alters given variables by incrementation, decrementation, or by copying a given value 
+*/
 class Idu
 {
 public:
-    Idu();
+    Idu() = default;
     ~Idu() = default;
 
     template<typename T>
