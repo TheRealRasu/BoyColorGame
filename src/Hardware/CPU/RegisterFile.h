@@ -4,12 +4,24 @@
 
 class RegisterFile
 {
-    public:
-        RegisterFile();
-        ~RegisterFile();
+public:
+    RegisterFile();
+    ~RegisterFile();
 
-    protected:
+    enum class Register : uint8_t
+    {
+        register_b = 0b000,
 
+    };
+
+    enum class RegisterPair : uint8_t
+    {
+        register_bc = 0,
+        register_de = 1,
+        register_hl = 2
+    };
+    
+protected:
     uint8_t* indexToRegister(uint8_t indexCode) const;
 
     uint8_t mInstructionRegister {};

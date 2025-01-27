@@ -1,9 +1,11 @@
 #include "Application.h"
 
-#include "../Memory/MemoryManager.h"
+#include "../Hardware/MemoryManager.h"
+#include "../Hardware/CPU/Idu.h"
 
 Application::Application()
 {
+    mIdu = std::make_unique<Idu>();
     mMemoryManager = std::make_unique<MemoryManager>();
 }
 
