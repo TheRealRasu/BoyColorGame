@@ -3,8 +3,7 @@
 #include <cstdint>
 #include <memory>
 
-class Idu;
-class MemoryManager;
+class CpuCore;
 
 class Application
 {
@@ -15,14 +14,6 @@ public:
     void processInput();
     
 protected:
-    std::unique_ptr<Idu> mIdu;    
-    std::unique_ptr<MemoryManager> mMemoryManager;
+    std::unique_ptr<CpuCore> mCpuCore;    
 
-    uint16_t mProgramCounter {};
-
-    struct __attribute__ ((packed)) Instruction
-    {
-        uint8_t opCode {};
-        uint8_t currentStep {};
-    }
 };

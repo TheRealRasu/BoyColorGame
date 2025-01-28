@@ -2,11 +2,11 @@
 
 #include <cstdint> 
 
-class RegisterFile
+class Registers
 {
 public:
-    RegisterFile();
-    ~RegisterFile();
+    Registers();
+    ~Registers();
 
     enum class Register : uint8_t
     {
@@ -21,9 +21,21 @@ public:
         register_hl = 2
     };
     
-protected:
-    uint8_t* indexToRegister(uint8_t indexCode) const;
+    // getters
+    uint16_t programCounter();
 
+    uint8_t singleRegisterValue(uint8_t identifier) const;
+    uint16_t combinedRegisterValue(uint8_t identifier) const;
+
+    uint8_t& singleRegister(uint8_t identifier);
+
+    // setters
+    void setSingleRegister(uint8_t identifier, uint8_t value);
+    void setCombinedRegister(uint8_t identifier, uint16_t value);
+
+    void setProgramCounter(uint16_t newValue);
+
+protected:
     uint8_t mInstructionRegister {};
     uint8_t mInterruptEnable {};
 
