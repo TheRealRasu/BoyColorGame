@@ -2,18 +2,8 @@
 
 #include "OpcodeCycleMap.h"
 
-#include "ALU/Alu.h"
-#include "ControlUnit/ControlUnit.h"
-#include "IDU/Idu.h"
-#include "Registers/Registers.h"
-
 CpuCore::CpuCore()
-{
-    mAlu = std::make_unique<Alu>();
-    mControlUnit = std::make_unique<ControlUnit>();
-    mIdu = std::make_unique<Idu>();
-    mRegisters = std::make_unique<Registers>();
-}
+{}
 
 void CpuCore::decodeNewInstruction(uint8_t newInstruction)
 {
@@ -86,8 +76,8 @@ void CpuCore::executeInstruction()
     {
         if (mCurrentInstruction.currentCycle == 0)
         {
-            mAddressBus = mRegisters->combinedRegisterValue(0);
-            mDataBus = mRegisters->singleRegisterValue(1);
+            mAddressBus = mRegisters.combinedRegisterValue(0);
+            mDataBus = mRegisters.singleRegisterValue(1);
 
         }
         
@@ -95,10 +85,10 @@ void CpuCore::executeInstruction()
     case 0x41:
     {
         // instruction takes only one cycle; no need to check
-        mAddressBus = mRegisters->programCounter();
-        mIdu->increaseValue(mAddressBus);
-        // mAlu->assignRegisterValue(2, 1);
-        mRegisters->setProgramCounter(mAddressBus);
+        mAddressBus = mRegisters.programCounter();
+        mIdu.increaseValue(mAddressBus);
+        // mAlu.assignRegisterValue(2, 1);
+        mRegisters.setProgramCounter(mAddressBus);
         // TODO
         break;
     }

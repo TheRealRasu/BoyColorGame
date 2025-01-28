@@ -3,10 +3,10 @@
 #include <cstdint>
 #include <memory>
 
-class Alu;
-class ControlUnit;
-class Idu;
-class Registers;
+#include "ALU/Alu.h"
+#include "ControlUnit/ControlUnit.h"
+#include "IDU/Idu.h"
+#include "Registers/Registers.h"
 
 class CpuCore
 {
@@ -23,12 +23,12 @@ public:
 private:
     void executeInstruction();
     
-    std::unique_ptr<Alu> mAlu;
-    std::unique_ptr<ControlUnit> mControlUnit;
-    std::unique_ptr<Idu> mIdu;
-    std::unique_ptr<Registers> mRegisters;
+    Alu mAlu;
+    ControlUnit mControlUnit;
+    Idu mIdu;
+    Registers mRegisters;
 
-    struct __attribute__ ((packed)) Instruction
+    struct Instruction
     {
         uint8_t instructionCode {};
         uint8_t instructionCycles {};

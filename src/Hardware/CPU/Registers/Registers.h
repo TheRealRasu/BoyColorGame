@@ -8,13 +8,13 @@ public:
     Registers();
     ~Registers();
 
-    enum class Register : uint8_t
+    enum class SingleRegister : uint8_t
     {
         register_b = 0b000,
 
     };
 
-    enum class RegisterPair : uint8_t
+    enum class CombinedRegister : uint8_t
     {
         register_bc = 0,
         register_de = 1,
