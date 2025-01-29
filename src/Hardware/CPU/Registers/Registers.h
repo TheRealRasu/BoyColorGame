@@ -52,6 +52,11 @@ public:
     std::cout << "&bc=" << &bc << "\n&b=" << &b << "\n&c=" << &c << "\n";
     std::cout << "bc=" << std::to_string(bc) << ",b=" << std::to_string(*b) << ",c=" << std::to_string(*c) << "\n";
 
+
+    uint8_t bVal = bc >> 8;
+    uint8_t cVal = bc & 0xFF;
+    
+
     OUTPUT:
     &bc=0x50539e
     &b=0x505398
