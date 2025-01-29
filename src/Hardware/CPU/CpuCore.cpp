@@ -86,9 +86,11 @@ void CpuCore::executeInstruction()
     {
         // instruction takes only one cycle; no need to check
         mAddressBus = mRegisters.programCounter();
+        mDataBus = mCurrentInstruction.instructionCode;
         mIdu.increaseValue(mAddressBus);
         // mAlu.assignRegisterValue(2, 1);
         mRegisters.setProgramCounter(mAddressBus);
+        mRegisters.setInstructionRegister(mDataBus);
         // TODO
         break;
     }

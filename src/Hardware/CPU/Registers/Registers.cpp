@@ -45,3 +45,8 @@ void Registers::setProgramCounter(uint16_t newValue)
 {
     mProgramCounter = newValue;
 }
+
+void Registers::setInstructionRegister(uint8_t instruction)
+{
+    mInstructionRegister = instruction;
+}
