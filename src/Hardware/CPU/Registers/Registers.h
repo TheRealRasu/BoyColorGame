@@ -23,18 +23,20 @@ public:
     
     // getters
     uint16_t programCounter() const;
+    uint8_t accumulator() const;
 
-    uint8_t singleRegisterValue(uint8_t identifier) const;
-    uint16_t combinedRegisterValue(uint8_t identifier) const;
+    uint8_t singleRegisterValue(const SingleRegister identifier) const;
+    uint16_t combinedRegisterValue(const CombinedRegister identifier) const;
 
-    uint8_t& singleRegister(uint8_t identifier);
+    uint8_t& singleRegister(const uint8_t identifier);
 
     // setters
-    void setSingleRegister(uint8_t identifier, uint8_t value);
-    void setCombinedRegister(uint8_t identifier, uint16_t value);
+    void setSingleRegister(const uint8_t identifier, const uint8_t value);
+    void setCombinedRegister(const CombinedRegister identifier, const uint16_t value);
 
-    void setProgramCounter(uint16_t newValue);
-    void setInstructionRegister(uint8_t instruction);
+    void setProgramCounter(const uint16_t newValue);
+    void setAccumulator(const uint8_t newValue);
+    void setInstructionRegister(const uint8_t instruction);
 
 
     /* TODO assign this to registers

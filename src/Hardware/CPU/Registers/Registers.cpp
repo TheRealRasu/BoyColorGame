@@ -11,42 +11,83 @@ uint16_t Registers::programCounter() const
     return mProgramCounter;
 }
 
-uint8_t Registers::singleRegisterValue(uint8_t identifier) const
+uint8_t Registers::accumulator() const
+{
+    return mAccumulator;
+}
+
+uint8_t Registers::singleRegisterValue(const SingleRegister identifier) const
 {
     // TODO
 
     return 0u;
 }
 
-uint16_t Registers::combinedRegisterValue(uint8_t identifier) const
+uint16_t Registers::combinedRegisterValue(const CombinedRegister identifier) const
 {
-    // TODO
+    switch (identifier)
+    {
+    case CombinedRegister::register_bc:
+    {
+        return mBcRegister;
+    }
+    case CombinedRegister::register_de:
+    {
+        return mDeRegister;
+    }
+    case CombinedRegister::register_hl:
+    {
+        return mHlRegister;
+    }
+    }
 
     return 0u;
 }
 
-uint8_t& Registers::singleRegister(uint8_t identifier)
+uint8_t& Registers::singleRegister(const uint8_t identifier)
 {
     // TODO
 
-    return mBRegister;
+    return mInstructionRegister;
 }
 
-void setSingleRegister(uint8_t identifier, uint8_t /* value */)
+void Registers::setSingleRegister(const uint8_t identifier, const uint8_t /* value */)
 {
     // TODO
 }
-void setCombinedRegister(uint8_t identifier, uint16_t /* value */)
+void Registers::setCombinedRegister(const CombinedRegister identifier, const  uint16_t value)
 {
-    // TODO
+    switch (identifier)
+    {
+    case CombinedRegister::register_bc:
+    {
+        mBcRegister = value;
+        break;
+    }
+    case CombinedRegister::register_de:
+    {
+        mDeRegister = value;
+        break;
+    }
+    case CombinedRegister::register_hl:
+    {
+        mHlRegister = value;
+        break;
+    }
+    }
 }
 
-void Registers::setProgramCounter(uint16_t newValue)
+void Registers::setProgramCounter(const uint16_t newValue)
 {
     mProgramCounter = newValue;
 }
 
-void Registers::setInstructionRegister(uint8_t instruction)
+void Registers::setAccumulator(const uint8_t newValue)
+{
+    mAccumulator = newValue;
+}
+
+void Registers::setInstructionRegister(const uint8_t instruction)
 {
     mInstructionRegister = instruction;
 }
