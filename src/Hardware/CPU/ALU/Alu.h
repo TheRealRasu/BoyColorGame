@@ -22,5 +22,5 @@ public:
     template<typename T>
     void assignRegisterValue(const T& srcRegister, T& destRegister) const;
 
-    void flipRegister(uint8_t value);
+    void flipRegister(uint8_t& value);
 };
