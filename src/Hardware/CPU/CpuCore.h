@@ -14,13 +14,21 @@ public:
     CpuCore();
     ~CpuCore() = default;
 
+    struct Instruction
+    {
+        uint8_t instructionCode {};
+        uint8_t instructionCycles {};
+        uint8_t currentCycle {};
+    };
+
     bool handleCurrentInstruction();
     void decodeNewInstruction(uint8_t newInstruction);
     bool checkInstructionCondition(uint8_t instruction);
 
     // getters
+    Instruction instruction() const;
     uint16_t programCounter() const;
-    
+
 private:
     void executeInstruction();
     
@@ -29,12 +37,6 @@ private:
     Idu mIdu;
     Registers mRegisters;
 
-    struct Instruction
-    {
-        uint8_t instructionCode {};
-        uint8_t instructionCycles {};
-        uint8_t currentCycle {};
-    };
 
     Instruction mCurrentInstruction {};
 

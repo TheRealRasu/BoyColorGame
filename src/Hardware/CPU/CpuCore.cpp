@@ -64,7 +64,13 @@ void CpuCore::executeInstruction()
     {
     case 0x00:
     {
-        // do nothing
+        mAddressBus = mRegisters.programCounter();
+        mDataBus = mCurrentInstruction.instructionCode;
+
+        mIdu.increaseValue(mAddressBus);
+
+        mRegisters.setProgramCounter(mAddressBus);
+
         break;
     }
     case 0x01:
@@ -76,26 +82,62 @@ void CpuCore::executeInstruction()
     {
         if (mCurrentInstruction.currentCycle == 0)
         {
-            mAddressBus = mRegisters.combinedRegisterValue(0);
-            mDataBus = mRegisters.singleRegisterValue(1);
+            mAddressBus = mRegisters.combinedRegisterValue(Registers::CombinedRegister::register_bc);
+            // mDataBus = mRegisters.singleRegisterValue(1);
+        }
+        else if (mCurrentInstruction.currentCycle == 1)
+        {
+            mAddressBus = mRegisters.programCounter();
+            mDataBus = mCurrentInstruction.instructionCode;
 
+            mIdu.increaseValue(mAddressBus);
+            mRegisters.setInstructionRegister(mDataBus);
+            mRegisters.setProgramCounter(mAddressBus);
         }
         
     }
-    case 0x41:
+    case 0x41: // load register (register)
     {
         // instruction takes only one cycle; no need to check
         mAddressBus = mRegisters.programCounter();
         mDataBus = mCurrentInstruction.instructionCode;
+
         mIdu.increaseValue(mAddressBus);
         // mAlu.assignRegisterValue(2, 1);
+
         mRegisters.setProgramCounter(mAddressBus);
         mRegisters.setInstructionRegister(mDataBus);
         // TODO
         break;
     }
+    case 0x2F: // complement accumulator
+    {
+        // instruction takes only one cycle; no need to check
+        mAddressBus = mRegisters.programCounter();
+        mDataBus = mCurrentInstruction.instructionCode;
+
+        mIdu.increaseValue(mAddressBus);
+        uint8_t accumulator = mRegisters.accumulator();
+        mAlu.flipRegister(accumulator);
+        mRegisters.setAccumulator(accumulator);
+        // TODO set flags
+        break;
+    }
+    case 0xE9: // jump to HL
+    {
+        mAddressBus = mRegisters.combinedRegisterValue(Registers::CombinedRegister::register_hl);
+        mDataBus = mCurrentInstruction.instructionCode;
+        
+        mIdu.increaseValue(mAddressBus);
+        mRegisters.setProgramCounter(mAddressBus);
+    }
         // TODO
     }
+}
+
+CpuCore::Instruction CpuCore::instruction() const
+{
+    return mCurrentInstruction;
 }
 
 uint16_t CpuCore::programCounter() const
