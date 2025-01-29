@@ -5,6 +5,18 @@
 CpuCore::CpuCore()
 {}
 
+bool CpuCore::handleCurrentInstruction()
+{
+    if (mCurrentInstruction.instructionCycles == 0 || mCurrentInstruction.instructionCycles == mCurrentInstruction.currentCycle)
+    {
+        return true;
+    }
+
+    executeInstruction();
+
+    return (++mCurrentInstruction.currentCycle == mCurrentInstruction.instructionCycles);
+}
+
 void CpuCore::decodeNewInstruction(uint8_t newInstruction)
 {
     mCurrentInstruction.instructionCode = newInstruction;
@@ -42,18 +54,6 @@ bool CpuCore::checkInstructionCondition(uint8_t instruction)
     }
     
     return true;
-}
-
-bool CpuCore::handleCurrentInstruction()
-{
-    if (mCurrentInstruction.instructionCycles == 0 || mCurrentInstruction.instructionCycles == mCurrentInstruction.currentCycle)
-    {
-        return true;
-    }
-
-    executeInstruction();
-
-    return (++mCurrentInstruction.currentCycle == mCurrentInstruction.instructionCycles);
 }
 
 void CpuCore::executeInstruction()
@@ -94,4 +94,9 @@ void CpuCore::executeInstruction()
     }
         // TODO
     }
+}
+
+uint16_t CpuCore::programCounter() const
+{
+    return mRegisters.programCounter();
 }

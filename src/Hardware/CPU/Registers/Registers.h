@@ -22,7 +22,7 @@ public:
     };
     
     // getters
-    uint16_t programCounter();
+    uint16_t programCounter() const;
 
     uint8_t singleRegisterValue(uint8_t identifier) const;
     uint16_t combinedRegisterValue(uint8_t identifier) const;

@@ -14,11 +14,12 @@ public:
     CpuCore();
     ~CpuCore() = default;
 
+    bool handleCurrentInstruction();
     void decodeNewInstruction(uint8_t newInstruction);
     bool checkInstructionCondition(uint8_t instruction);
 
-    bool handleCurrentInstruction();
-
+    // getters
+    uint16_t programCounter() const;
     
 private:
     void executeInstruction();

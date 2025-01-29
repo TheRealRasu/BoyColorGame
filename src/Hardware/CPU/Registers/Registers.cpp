@@ -6,7 +6,7 @@ Registers::Registers()
 Registers::~Registers()
 {}
 
-uint16_t Registers::programCounter()
+uint16_t Registers::programCounter() const
 {
     return mProgramCounter;
 }
