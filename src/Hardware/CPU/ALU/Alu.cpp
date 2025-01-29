@@ -23,3 +23,8 @@ void Alu::assignRegisterValue(const T& srcRegister, T& destRegister) const
 }
 template void Alu::assignRegisterValue<uint8_t>(const uint8_t& srcRegister, uint8_t& destRegister) const;
 template void Alu::assignRegisterValue<uint16_t>(const uint16_t& srcRegister, uint16_t& destRegister) const;
+
+void Alu::flipRegister(uint8_t& value)
+{
+    value = ~value;
+}
