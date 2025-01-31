@@ -58,9 +58,44 @@ bool CpuCore::checkInstructionCondition(uint8_t instruction)
 
 void CpuCore::executeInstruction()
 {
-    const uint8_t opcode = mCurrentInstruction.instructionCode;
+    const uint8_t instructionCode = mCurrentInstruction.instructionCode;
+    
+    switch (instructionCode >> 6)
+    {
+    case 0b00:
+    {
+        // various instructions
+    }
+    case 0b01:
+    {
+        if (instructionCode == 0x76) // special case: HALT
+        {
+            mAddressBus = mRegisters.programCounter();
+            mDataBus = mCurrentInstruction.instructionCode;
 
-    switch (opcode)
+            mRegisters.setInterruptEnable(0);
+
+            mIdu.increaseValue(mAddressBus);
+            mRegisters.setProgramCounter(mAddressBus);
+        }
+
+        // load 8-bit value and store it   
+    }
+    case 0b10:
+    {
+        // Arithmetic operations regarding register A
+    }
+    case 0b11:
+    {
+        
+    }
+    default: // we already covered all cases, but the compiler needs to nitpick
+    {
+        break;
+    }
+    }
+
+    switch (instructionCode)
     {
     case 0x00:
     {

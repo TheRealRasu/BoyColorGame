@@ -91,3 +91,8 @@ void Registers::setInstructionRegister(const uint8_t instruction)
 {
     mInstructionRegister = instruction;
 }
+
+void Registers::setInterruptEnable(const uint8_t newValue)
+{
+    mInterruptEnable = newValue;
+}

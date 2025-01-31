@@ -34,9 +34,11 @@ public:
     void setSingleRegister(const uint8_t identifier, const uint8_t value);
     void setCombinedRegister(const CombinedRegister identifier, const uint16_t value);
 
+
     void setProgramCounter(const uint16_t newValue);
     void setAccumulator(const uint8_t newValue);
     void setInstructionRegister(const uint8_t instruction);
+    void setInterruptEnable(const uint8_t newValue);
 
 
     /* TODO assign this to registers
