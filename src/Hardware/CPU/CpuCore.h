@@ -44,9 +44,6 @@ public:
     void decodeNewInstruction(uint8_t newInstruction);
     bool checkInstructionCondition(uint8_t instruction);
 
-    // getters
-    Instruction instruction() const;
-
 private:
     void executeInstruction();
 
@@ -54,6 +51,7 @@ private:
     void increaseAndStoreProgramCounter();
     
     // methods for instructions
+    void registerAddition();
 
     Alu mAlu;
     ControlUnit mControlUnit;
@@ -66,5 +64,4 @@ private:
     uint8_t mDataBus {};
     uint16_t mAddressBus {};
 
-    void loadBc();
 };

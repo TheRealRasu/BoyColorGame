@@ -24,6 +24,8 @@ void CpuCore::decodeNewInstruction(uint8_t newInstruction)
 
     const bool instructionCondition = checkInstructionCondition(newInstruction);
     mCurrentInstruction.instructionCycles = instructionCondition ? cyclesPerOpcode.at(newInstruction).first : cyclesPerOpcode.at(newInstruction).second;
+
+    increaseAndStoreProgramCounter();
 }
 
 bool CpuCore::checkInstructionCondition(uint8_t instruction)
@@ -202,13 +204,22 @@ void CpuCore::executeInstruction()
     }
 }
 
-CpuCore::Instruction CpuCore::instruction() const
-{
-    return mCurrentInstruction;
-}
-
 void CpuCore::increaseAndStoreProgramCounter()
 {
     mIdu.increaseValue(mAddressBus);
     mRegisters.setProgramCounter(mAddressBus);
+}
+
+void CpuCore::registerAddition()
+{
+    const uint8_t instructionCode = mCurrentInstruction.instructionCode;
+
+    const uint8_t arithmeticOperation = (instructionCode >> 3) & 0b111;
+    const uint8_t registerOperand = instructionCode & 0b111;
+    const uint8_t accumulatorValue = mRegisters.accumulator();
+
+    const uint8_t result = mAlu.arithmeticOperation(accumulatorValue, mDataBus, arithmeticOperation);
+    mRegisters.setAccumulator(result);
+
+    // TODO flags
 }

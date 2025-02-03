@@ -16,6 +16,11 @@ uint8_t Registers::accumulator() const
     return mAccumulator;
 }
 
+bool Registers::flagValue(FlagsPosition pos) const
+{
+    return (mFlagsRegister >> static_cast<uint8_t>(pos)) & 0b1;
+}
+
 uint8_t Registers::smallRegisterValue(const uint8_t identifier) const
 {
     switch (identifier)
@@ -65,6 +70,41 @@ uint16_t Registers::bigRegisterValue(const BigRegisterIdentifier identifier) con
     }
 
     return 0u;
+}
+
+void Registers::setProgramCounter(const uint16_t newValue)
+{
+    mProgramCounter = newValue;
+}
+
+void Registers::setAccumulator(const uint8_t newValue)
+{
+    mAccumulator = newValue;
+}
+
+void Registers::setInstructionRegister(const uint8_t instruction)
+{
+    mInstructionRegister = instruction;
+}
+
+void Registers::setInterruptEnable(const uint8_t newValue)
+{
+    mInterruptEnable = newValue;
+}
+
+
+void Registers::setFlagValue(FlagsPosition pos, bool value)
+{
+    const uint8_t flagValue = value << static_cast<uint8_t>(pos);
+
+    if (value)
+    {
+        mFlagsRegister |= flagValue;
+    }
+    else
+    {
+        mFlagsRegister &= ~flagValue;
+    }
 }
 
 void Registers::setSmallRegister(const uint8_t identifier, const uint8_t value)
@@ -148,24 +188,4 @@ void Registers::setBigRegister(const BigRegisterIdentifier identifier, const uin
             break;
         }
     }
-}
-
-void Registers::setProgramCounter(const uint16_t newValue)
-{
-    mProgramCounter = newValue;
-}
-
-void Registers::setAccumulator(const uint8_t newValue)
-{
-    mAccumulator = newValue;
-}
-
-void Registers::setInstructionRegister(const uint8_t instruction)
-{
-    mInstructionRegister = instruction;
-}
-
-void Registers::setInterruptEnable(const uint8_t newValue)
-{
-    mInterruptEnable = newValue;
 }
