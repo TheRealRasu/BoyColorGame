@@ -52,6 +52,12 @@ private:
     
     // methods for instructions
     void registerAddition();
+//    void registerSubtraction();
+//    void registerSubtractionWithCarry();
+//    void registerComparison();
+//    void registerIncrementation();
+//    void registerDecrementation();
+    void registerAddition();
 
     Alu mAlu;
     ControlUnit mControlUnit;

@@ -31,15 +31,16 @@ public:
     };
 
     template<typename T>
-    void incrementRegister(T& givenRegister) const;
+    T incrementRegister(const T givenRegister) const;
 
     template<typename T>
-    void decrementRegister(T& givenRegister) const;
+    T decrementRegister(const T givenRegister) const;
 
     template<typename T>
     void assignRegisterValue(const T& srcRegister, T& destRegister) const;
 
-    uint8_t arithmeticOperation(const uint8_t firstValue, const uint8_t secondValue, const uint8_t arithmeticOpType) const;
+    template<typename T>
+    T flipValue(const T value);
 
-    void flipRegister(uint8_t& value);
+    uint8_t arithmeticOperation(const uint8_t firstValue, const uint8_t secondValue, const uint8_t arithmeticOpType) const;
 };

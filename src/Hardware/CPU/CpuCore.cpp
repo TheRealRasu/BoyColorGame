@@ -123,7 +123,31 @@ void CpuCore::executeInstruction()
     }
     case 0b11:
     {
-        
+        // TODO
+        if (instructionCode == 0x3F) // complement carry flag
+        {
+            mAddressBus = mRegisters.programCounter();
+            mDataBus = mCurrentInstruction.instructionCode;
+
+            const bool carryFlag = mAlu.flipValue(mRegisters.flagValue(Registers::FlagsPosition::carry_flag));
+
+            mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, carryFlag);
+            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
+            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+
+            increaseAndStoreProgramCounter();
+        }
+        if (instructionCode == 0x3F) // set carry flag
+        {
+            mAddressBus = mRegisters.programCounter();
+            mDataBus = mCurrentInstruction.instructionCode;
+
+            mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, true);
+            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
+            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+
+            increaseAndStoreProgramCounter();
+        }
     }
     default: // we already covered all cases, but the compiler needs to nitpick
     {
@@ -221,5 +245,8 @@ void CpuCore::registerAddition()
     const uint8_t result = mAlu.arithmeticOperation(accumulatorValue, mDataBus, arithmeticOperation);
     mRegisters.setAccumulator(result);
 
-    // TODO flags
+    mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, (result >> 7) & 0b1);
+    mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (result >> 3) & 0b1);
+    mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+    mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, result == 0);
 }
