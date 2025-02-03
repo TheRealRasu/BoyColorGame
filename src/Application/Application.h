@@ -4,7 +4,6 @@
 #include <memory>
 
 class CpuCore;
-class MemoryManager;
 
 class Application
 {

@@ -52,12 +52,12 @@ protected:
     uint8_t mAccumulator {};
     uint8_t mFlagsRegister {};
 
-    uint16_t mBRegister {};
-    uint16_t mCRegister {};
-    uint16_t mDRegister {};
-    uint16_t mERegister {};
-    uint16_t mHRegister {};
-    uint16_t mLRegister {};
+    uint8_t mBRegister {};
+    uint8_t mCRegister {};
+    uint8_t mDRegister {};
+    uint8_t mERegister {};
+    uint8_t mHRegister {};
+    uint8_t mLRegister {};
 
     uint16_t mProgramCounter {};
     uint16_t mStackPointer {};

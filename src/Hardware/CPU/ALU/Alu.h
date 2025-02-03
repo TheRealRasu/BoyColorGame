@@ -39,8 +39,7 @@ public:
     template<typename T>
     void assignRegisterValue(const T& srcRegister, T& destRegister) const;
 
-    template<typename T>
-    T flipValue(const T value);
+    uint8_t flipValue(const uint8_t value);
 
     uint8_t arithmeticOperation(const uint8_t firstValue, const uint8_t secondValue, const uint8_t arithmeticOpType) const;
 };

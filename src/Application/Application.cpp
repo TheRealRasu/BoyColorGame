@@ -1,6 +1,5 @@
 #include "Application.h"
 
-#include "../Hardware/MemoryManager.h"
 #include "../Hardware/CPU/CpuCore.h"
 
 Application::Application()
@@ -17,7 +16,7 @@ void Application::cpuLoop()
 
     if (loadNewInstruction)
     {
-        mCpuCore->decodeNewInstruction();
+        // mCpuCore->decodeNewInstruction();
     }
 }
 

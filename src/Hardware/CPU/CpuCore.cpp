@@ -212,7 +212,7 @@ void CpuCore::executeInstruction()
 
         mIdu.increaseValue(mAddressBus);
         uint8_t accumulator = mRegisters.accumulator();
-        mAlu.flipRegister(accumulator);
+        mAlu.flipValue(accumulator);
         mRegisters.setAccumulator(accumulator);
         // TODO set flags
         break;

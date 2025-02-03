@@ -3,7 +3,7 @@
 template<typename T>
 T Alu::incrementRegister(const T givenRegister) const
 {
-    return ++givenRegister;
+    return givenRegister + 1;
 }
 template uint8_t Alu::incrementRegister<uint8_t>(const uint8_t givenRegister) const;
 template uint16_t Alu::incrementRegister<uint16_t>(const uint16_t givenRegister) const;
@@ -11,7 +11,7 @@ template uint16_t Alu::incrementRegister<uint16_t>(const uint16_t givenRegister)
 template<typename T>
 T Alu::decrementRegister(const T givenValue) const
 {
-    return --givenValue;
+    return givenValue - 1;
 }
 template uint8_t Alu::decrementRegister<uint8_t>(const uint8_t givenValue) const;
 template uint16_t Alu::decrementRegister<uint16_t>(const uint16_t givenValue) const;
@@ -24,13 +24,10 @@ void Alu::assignRegisterValue(const T& srcRegister, T& destRegister) const
 template void Alu::assignRegisterValue<uint8_t>(const uint8_t& srcRegister, uint8_t& destRegister) const;
 template void Alu::assignRegisterValue<uint16_t>(const uint16_t& srcRegister, uint16_t& destRegister) const;
 
-template<typename T>
-T Alu::flipValue(const T value)
+uint8_t Alu::flipValue(const uint8_t value)
 {
     return ~value;
 }
-template bool Alu::flipValue<bool>(const bool value);
-template uint8_t Alu::flipValue<uint8_t>(const uint8_t value);
 
 uint8_t Alu::arithmeticOperation(const uint8_t firstValue, const uint8_t secondValue, const uint8_t arithmeticOpType) const
 {
