@@ -18,8 +18,4 @@ public:
     
 protected:
     std::unique_ptr<CpuCore> mCpuCore;
-    std::unique_ptr<MemoryManager> mMemoryManager;
-
-    uint8_t mCurrentInstruction {};
-
 };

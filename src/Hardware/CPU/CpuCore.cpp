@@ -19,7 +19,7 @@ bool CpuCore::handleCurrentInstruction()
 
 void CpuCore::decodeNewInstruction(uint8_t newInstruction)
 {
-    mCurrentInstruction.instructionCode = newInstruction;
+    mCurrentInstruction.instructionCode = mMemoryManager.getMemoryAtAddress(mRegisters.programCounter());
     mCurrentInstruction.currentCycle = 0;
 
     const bool instructionCondition = checkInstructionCondition(newInstruction);
@@ -59,8 +59,10 @@ bool CpuCore::checkInstructionCondition(uint8_t instruction)
 void CpuCore::executeInstruction()
 {
     const uint8_t instructionCode = mCurrentInstruction.instructionCode;
+
+    const uint8_t operationType = instructionCode >> 6;
     
-    switch (instructionCode >> 6)
+    switch (operationType)
     {
     case 0b00:
     {
@@ -79,11 +81,43 @@ void CpuCore::executeInstruction()
             mRegisters.setProgramCounter(mAddressBus);
         }
 
+        const uint8_t firstOperand = (instructionCode >> 3) & 0b111;
+        const uint8_t secondOperand = instructionCode & 0b111;
+
+
         // load 8-bit value and store it   
     }
     case 0b10:
     {
-        // Arithmetic operations regarding register A
+        // Arithmetic operations with the accumulator register
+        const uint8_t arithmeticOperation = (instructionCode >> 3) & 0b111;
+        const uint8_t registerOperand = instructionCode & 0b111;
+        const uint8_t accumulatorValue = mRegisters.accumulator();
+
+        if (registerOperand == 0x06)
+        {
+            if (mCurrentInstruction.currentCycle == 0)
+            {
+                mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl);
+                mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+                return;
+            }
+            else if (mCurrentInstruction.currentCycle == 1)
+            {
+                const uint8_t result = mAlu.arithmeticOperation(accumulatorValue, mDataBus, arithmeticOperation);
+                mRegisters.setAccumulator(result);
+
+                // TODO flags
+
+                mAddressBus = mRegisters.programCounter();
+                mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+                uint16_t programCounter = mRegisters.programCounter();
+                mIdu.increaseValue(programCounter);
+                mRegisters.setProgramCounter(programCounter);
+            }
+        }
+
+        const uint8_t secondRegister = mRegisters.smallRegisterValue(registerOperand);
     }
     case 0b11:
     {
@@ -102,9 +136,7 @@ void CpuCore::executeInstruction()
         mAddressBus = mRegisters.programCounter();
         mDataBus = mCurrentInstruction.instructionCode;
 
-        mIdu.increaseValue(mAddressBus);
-
-        mRegisters.setProgramCounter(mAddressBus);
+        increaseAndStoreProgramCounter();
 
         break;
     }
@@ -117,19 +149,20 @@ void CpuCore::executeInstruction()
     {
         if (mCurrentInstruction.currentCycle == 0)
         {
-            mAddressBus = mRegisters.combinedRegisterValue(Registers::CombinedRegister::register_bc);
-            // mDataBus = mRegisters.singleRegisterValue(1);
+            mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_bc);
+            mDataBus = mRegisters.smallRegisterValue(1);
         }
         else if (mCurrentInstruction.currentCycle == 1)
         {
             mAddressBus = mRegisters.programCounter();
             mDataBus = mCurrentInstruction.instructionCode;
 
-            mIdu.increaseValue(mAddressBus);
+            increaseAndStoreProgramCounter();
+
             mRegisters.setInstructionRegister(mDataBus);
-            mRegisters.setProgramCounter(mAddressBus);
         }
-        
+        // TODO?
+        break;
     }
     case 0x41: // load register (register)
     {
@@ -137,10 +170,10 @@ void CpuCore::executeInstruction()
         mAddressBus = mRegisters.programCounter();
         mDataBus = mCurrentInstruction.instructionCode;
 
-        mIdu.increaseValue(mAddressBus);
         // mAlu.assignRegisterValue(2, 1);
 
-        mRegisters.setProgramCounter(mAddressBus);
+        increaseAndStoreProgramCounter();
+
         mRegisters.setInstructionRegister(mDataBus);
         // TODO
         break;
@@ -160,11 +193,10 @@ void CpuCore::executeInstruction()
     }
     case 0xE9: // jump to HL
     {
-        mAddressBus = mRegisters.combinedRegisterValue(Registers::CombinedRegister::register_hl);
+        mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl);
         mDataBus = mCurrentInstruction.instructionCode;
         
-        mIdu.increaseValue(mAddressBus);
-        mRegisters.setProgramCounter(mAddressBus);
+        increaseAndStoreProgramCounter();
     }
         // TODO
     }
@@ -175,7 +207,8 @@ CpuCore::Instruction CpuCore::instruction() const
     return mCurrentInstruction;
 }
 
-uint16_t CpuCore::programCounter() const
+void CpuCore::increaseAndStoreProgramCounter()
 {
-    return mRegisters.programCounter();
+    mIdu.increaseValue(mAddressBus);
+    mRegisters.setProgramCounter(mAddressBus);
 }
