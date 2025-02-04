@@ -1,5 +1,4 @@
-Application.dir/
-BoyColorGame.dir/
+*.dir/
 CMakeFiles/
 Debug/
 *.vcxproj*
