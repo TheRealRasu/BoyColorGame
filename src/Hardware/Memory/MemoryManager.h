@@ -9,7 +9,8 @@ class MemoryManager
         MemoryManager();
         ~MemoryManager();
 
-    uint8_t getMemoryAtAddress(uint16_t address) const;
+    uint8_t getMemoryAtAddress(const uint16_t address) const;
+    void writeToMemoryAddress(const uint16_t address, const uint8_t value);
 
     protected:
         std::vector<uint8_t> mRam;
