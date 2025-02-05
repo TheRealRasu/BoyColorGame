@@ -99,10 +99,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
     {
         case 0x00:
         {
-            mAddressBus = mRegisters.programCounter();
-            mDataBus = mCurrentInstruction.instructionCode;
-
-            increaseAndStoreProgramCounter();
+            // don't do anything
 
             break;
         }
@@ -155,8 +152,6 @@ void CpuCore::handleZeroOneInstructionBlock()
     if (firstOperand == 0b110 && secondOperand == 0b110) // special case: HALT
     {
         mRegisters.setInterruptEnable(0);
-
-        increaseAndStoreProgramCounter();
         return;
     }
 
@@ -171,9 +166,7 @@ void CpuCore::handleZeroOneInstructionBlock()
         }
         else if (mCurrentInstruction.currentCycle == 1)
         {
-            mAddressBus = mRegisters.programCounter();
-            mDataBus = instructionCode;
-            increaseAndStoreProgramCounter();
+            // nothing left to do; let the cycle play out
         }
 
         return;
@@ -192,10 +185,6 @@ void CpuCore::handleZeroOneInstructionBlock()
             mAlu.assignRegisterValue(mDataBus, registerValue);
 
             mRegisters.setSmallRegister(secondOperand, registerValue);
-
-            mAddressBus = mRegisters.programCounter();
-            mDataBus = mCurrentInstruction.instructionCode;
-            increaseAndStoreProgramCounter();
         }
             
         return;
@@ -209,7 +198,6 @@ void CpuCore::handleZeroOneInstructionBlock()
     mAlu.assignRegisterValue(srcRegister, registerValue);
     mRegisters.setSmallRegister(firstOperand, registerValue);
 
-    increaseAndStoreProgramCounter();
     return;
 }
 
@@ -222,7 +210,7 @@ void CpuCore::handleOneZeroInstructionBlock()
     const uint8_t arithmeticOperation = (instructionCode >> 3) & 0b111;
     const uint8_t registerOperand = instructionCode & 0b111;
 
-    if (registerOperand == 0b110)
+    if (registerOperand == 0b110) // HL register instructions
     {
         if (mCurrentInstruction.currentCycle == 0)
         {
@@ -236,34 +224,17 @@ void CpuCore::handleOneZeroInstructionBlock()
             mRegisters.setAccumulator(result);
 
             setFlagsAfterArithmeticOperation(arithmeticOperation, result);
-
-            mAddressBus = mRegisters.programCounter();
-            mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
-            
-            increaseAndStoreProgramCounter();
+            return;
         }
     }
 
     const uint8_t secondRegister = mRegisters.smallRegisterValue(registerOperand);
 
+    const uint8_t result = mAlu.arithmeticOperation(accumulatorValue, secondRegister, arithmeticOperation);
+    mRegisters.setAccumulator(result);
 
-/*
-    case 0x41: // load register (register)
-    {
-        // instruction takes only one cycle; no need to check
-        mAddressBus = mRegisters.programCounter();
-        mDataBus = mCurrentInstruction.instructionCode;
-
-        // mAlu.assignRegisterValue(2, 1);
-
-        increaseAndStoreProgramCounter();
-
-        mRegisters.setInstructionRegister(mDataBus);
-        // TODO
-        break;
-    }
-*/
-
+    setFlagsAfterArithmeticOperation(arithmeticOperation, result);
+    return;
 }
 
 void CpuCore::handleOneOneInstructionBlock()
@@ -310,7 +281,6 @@ void CpuCore::increaseAndStoreProgramCounter()
     mRegisters.setProgramCounter(mAddressBus);
 }
 
-
 void CpuCore::setFlagsAfterArithmeticOperation(uint8_t operationType, uint8_t result)
 {
     switch (static_cast<AluOperationType>(operationType))
@@ -350,21 +320,4 @@ void CpuCore::setFlagsAfterArithmeticOperation(uint8_t operationType, uint8_t re
     }
 
     mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, (result == 0));
-}
-
-void CpuCore::registerAddition()
-{
-    const uint8_t instructionCode = mCurrentInstruction.instructionCode;
-
-    const uint8_t arithmeticOperation = (instructionCode >> 3) & 0b111;
-    const uint8_t registerOperand = instructionCode & 0b111;
-    const uint8_t accumulatorValue = mRegisters.accumulator();
-
-    const uint8_t result = mAlu.arithmeticOperation(accumulatorValue, mDataBus, arithmeticOperation);
-    mRegisters.setAccumulator(result);
-
-    mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, (result >> 7) & 0b1);
-    mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (result >> 3) & 0b1);
-    mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
-    mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, result == 0);
 }

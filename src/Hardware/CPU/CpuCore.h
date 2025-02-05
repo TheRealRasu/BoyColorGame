@@ -50,15 +50,8 @@ private:
     // convenience methods
     void increaseAndStoreProgramCounter();
 
-    
     // methods for instructions
     void setFlagsAfterArithmeticOperation(uint8_t operationType, uint8_t result);
-    void registerAddition();
-//    void registerSubtraction();
-//    void registerSubtractionWithCarry();
-//    void registerComparison();
-//    void registerIncrementation();
-//    void registerDecrementation();
 
     Alu mAlu;
     ControlUnit mControlUnit;
