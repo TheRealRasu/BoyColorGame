@@ -19,10 +19,10 @@ public:
     
     enum class FlagsPosition : uint8_t
     {
-        carry_flag = 4,
-        half_carry_flag = 5,
-        subtraction_flag = 6,
-        zero_flag = 7
+        carry_flag = 4, // C flag
+        half_carry_flag = 5, // H flag
+        subtraction_flag = 6, // N flag
+        zero_flag = 7 // Z flag
     };
 
     // getters
