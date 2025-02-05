@@ -5,25 +5,29 @@
 CpuCore::CpuCore()
 {}
 
-bool CpuCore::handleCurrentInstruction()
+void CpuCore::handleCurrentInstruction()
 {
-    if (mCurrentInstruction.instructionCycles == 0 || mCurrentInstruction.instructionCycles == mCurrentInstruction.currentCycle)
+    const bool getNewInstruction = (mCurrentInstruction.instructionCycles == 0 || mCurrentInstruction.instructionCycles == mCurrentInstruction.currentCycle);
+
+    if (!getNewInstruction) executeInstruction();
+
+    if ((++mCurrentInstruction.currentCycle == mCurrentInstruction.instructionCycles) || getNewInstruction)
     {
-        return true;
+        loadNewInstruction();
     }
-
-    executeInstruction();
-
-    return (++mCurrentInstruction.currentCycle == mCurrentInstruction.instructionCycles);
 }
 
-void CpuCore::decodeNewInstruction(uint8_t newInstruction)
+void CpuCore::loadNewInstruction()
 {
-    mCurrentInstruction.instructionCode = mMemoryManager.getMemoryAtAddress(mRegisters.programCounter());
+    mAddressBus = mRegisters.programCounter();
+    const uint8_t instructionCode = mMemoryManager.getMemoryAtAddress(mAddressBus);
+    mDataBus = instructionCode;
+    
+    mCurrentInstruction.instructionCode = instructionCode;
     mCurrentInstruction.currentCycle = 0;
 
-    const bool instructionCondition = checkInstructionCondition(newInstruction);
-    mCurrentInstruction.instructionCycles = instructionCondition ? cyclesPerOpcode.at(newInstruction).first : cyclesPerOpcode.at(newInstruction).second;
+    const std::pair<uint8_t, uint8_t>& cycles = cyclesPerOpcode.at(instructionCode);
+    mCurrentInstruction.instructionCycles = checkInstructionCondition(instructionCode) ? cycles.first : cycles.second;
 
     increaseAndStoreProgramCounter();
 }
@@ -60,136 +64,172 @@ bool CpuCore::checkInstructionCondition(uint8_t instruction)
 
 void CpuCore::executeInstruction()
 {
-    const uint8_t instructionCode = mCurrentInstruction.instructionCode;
-
-    const uint8_t operationType = instructionCode >> 6;
+    const uint8_t operationType = mCurrentInstruction.instructionCode >> 6;
     
-    switch (operationType)
+    if (operationType == 0b00)
     {
-    case 0b00:
-    {
-        // various instructions
+        handleZeroZeroInstructionBlock();
+        return;
     }
-    case 0b01:
+
+    if (operationType == 0b01)
     {
-        if (instructionCode == 0x76) // special case: HALT
+        handleZeroOneInstructionBlock();
+        return;
+    }
+
+    if (operationType == 0b10)
+    {
+        handleOneZeroInstructionBlock();
+        return;
+    }
+
+    if (operationType == 0b11)
+    {
+        handleOneOneInstructionBlock();
+        return;
+    }
+}
+
+
+void CpuCore::handleZeroZeroInstructionBlock()
+{
+    const uint8_t instructionCode = mCurrentInstruction.instructionCode;
+    switch (instructionCode)
+    {
+        case 0x00:
         {
             mAddressBus = mRegisters.programCounter();
             mDataBus = mCurrentInstruction.instructionCode;
 
-            mRegisters.setInterruptEnable(0);
+            increaseAndStoreProgramCounter();
 
-            mIdu.increaseValue(mAddressBus);
-            mRegisters.setProgramCounter(mAddressBus);
+            break;
         }
-
-        const uint8_t firstOperand = (instructionCode >> 3) & 0b111;
-        const uint8_t secondOperand = instructionCode & 0b111;
-
-
-        // load 8-bit value and store it   
-    }
-    case 0b10:
-    {
-        // Arithmetic operations with the accumulator register
-        const uint8_t arithmeticOperation = (instructionCode >> 3) & 0b111;
-        const uint8_t registerOperand = instructionCode & 0b111;
-        const uint8_t accumulatorValue = mRegisters.accumulator();
-
-        if (registerOperand == 0x06)
+        case 0x01:
+        {
+            // TODO
+            break;
+        }
+        case 0x02:
         {
             if (mCurrentInstruction.currentCycle == 0)
             {
-                mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl);
-                mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
-                return;
+                mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_bc);
+                mDataBus = mRegisters.accumulator();
+                mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
             }
             else if (mCurrentInstruction.currentCycle == 1)
             {
-                const uint8_t result = mAlu.arithmeticOperation(accumulatorValue, mDataBus, arithmeticOperation);
-                mRegisters.setAccumulator(result);
-
-                // TODO flags
-
                 mAddressBus = mRegisters.programCounter();
-                mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
-                uint16_t programCounter = mRegisters.programCounter();
-                mIdu.increaseValue(programCounter);
-                mRegisters.setProgramCounter(programCounter);
+                mDataBus = mCurrentInstruction.instructionCode;
+
+                increaseAndStoreProgramCounter();
+
+                mRegisters.setInstructionRegister(mDataBus);
             }
+            // TODO?
+            break;
         }
-
-        const uint8_t secondRegister = mRegisters.smallRegisterValue(registerOperand);
-    }
-    case 0b11:
-    {
-        // TODO
-        if (instructionCode == 0x3F) // complement carry flag
+        case 0x2F: // complement accumulator
         {
-            mAddressBus = mRegisters.programCounter();
-            mDataBus = mCurrentInstruction.instructionCode;
+            // instruction takes only one cycle; no need to check
+            uint8_t accumulator = mRegisters.accumulator();
+            mAlu.flipValue(accumulator);
+            mRegisters.setAccumulator(accumulator);
 
-            const bool carryFlag = mAlu.flipValue(mRegisters.flagValue(Registers::FlagsPosition::carry_flag));
-
-            mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, carryFlag);
-            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
-            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
-
-            increaseAndStoreProgramCounter();
-        }
-        if (instructionCode == 0x3F) // set carry flag
-        {
-            mAddressBus = mRegisters.programCounter();
-            mDataBus = mCurrentInstruction.instructionCode;
-
-            mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, true);
-            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
-            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
-
-            increaseAndStoreProgramCounter();
+            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, true);
+            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, true);
+            break;
         }
     }
-    default: // we already covered all cases, but the compiler needs to nitpick
-    {
-        break;
-    }
-    }
+}
 
-    switch (instructionCode)
-    {
-    case 0x00:
+void CpuCore::handleZeroOneInstructionBlock()
+{
+    const uint8_t instructionCode = mCurrentInstruction.instructionCode;
+
+
+    if (instructionCode == 0x76) // special case: HALT
     {
         mAddressBus = mRegisters.programCounter();
         mDataBus = mCurrentInstruction.instructionCode;
+        mRegisters.setInterruptEnable(0);
 
         increaseAndStoreProgramCounter();
+        return;
+    }
 
-        break;
-    }
-    case 0x01:
-    {
-        // TODO
-        break;
-    }
-    case 0x02:
+    const uint8_t firstOperand = (instructionCode >> 3) & 0b111;
+    const uint8_t secondOperand = instructionCode & 0b111;
+
+    if (secondOperand == 0b110) // sepcial case: get memory data at HL adress
     {
         if (mCurrentInstruction.currentCycle == 0)
         {
-            mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_bc);
-            mDataBus = mRegisters.smallRegisterValue(1);
+            mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl);
+            mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+            return;
         }
         else if (mCurrentInstruction.currentCycle == 1)
         {
+            uint8_t registerValue = mRegisters.smallRegisterValue(firstOperand);
+            mAlu.assignRegisterValue(mDataBus, registerValue);
+
+            mRegisters.setSmallRegister(secondOperand, registerValue);
+
             mAddressBus = mRegisters.programCounter();
             mDataBus = mCurrentInstruction.instructionCode;
-
             increaseAndStoreProgramCounter();
-
-            mRegisters.setInstructionRegister(mDataBus);
+            return;
         }
-        // TODO?
-        break;
     }
+
+    uint8_t destRegister = mRegisters.smallRegisterValue(firstOperand);
+    const uint8_t srcRegister = mRegisters.smallRegisterValue(secondOperand);
+
+    mAlu.assignRegisterValue(srcRegister, destRegister);
+    mRegisters.setSmallRegister(firstOperand, destRegister);
+
+    increaseAndStoreProgramCounter();
+    return;
+}
+
+void CpuCore::handleOneZeroInstructionBlock()
+{
+    const uint8_t instructionCode = mCurrentInstruction.instructionCode;
+
+    // Arithmetic operations with the accumulator register
+    const uint8_t arithmeticOperation = (instructionCode >> 3) & 0b111;
+    const uint8_t registerOperand = instructionCode & 0b111;
+    const uint8_t accumulatorValue = mRegisters.accumulator();
+
+    if (registerOperand == 0x06)
+    {
+        if (mCurrentInstruction.currentCycle == 0)
+        {
+            mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl);
+            mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+            return;
+        }
+        else if (mCurrentInstruction.currentCycle == 1)
+        {
+            const uint8_t result = mAlu.arithmeticOperation(accumulatorValue, mDataBus, arithmeticOperation);
+            mRegisters.setAccumulator(result);
+
+            // TODO flags
+
+            mAddressBus = mRegisters.programCounter();
+            mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+            uint16_t programCounter = mRegisters.programCounter();
+            mIdu.increaseValue(programCounter);
+            mRegisters.setProgramCounter(programCounter);
+        }
+    }
+
+    const uint8_t secondRegister = mRegisters.smallRegisterValue(registerOperand);
+
+/*
     case 0x41: // load register (register)
     {
         // instruction takes only one cycle; no need to check
@@ -204,27 +244,45 @@ void CpuCore::executeInstruction()
         // TODO
         break;
     }
-    case 0x2F: // complement accumulator
-    {
-        // instruction takes only one cycle; no need to check
-        mAddressBus = mRegisters.programCounter();
-        mDataBus = mCurrentInstruction.instructionCode;
+*/
 
-        mIdu.increaseValue(mAddressBus);
-        uint8_t accumulator = mRegisters.accumulator();
-        mAlu.flipValue(accumulator);
-        mRegisters.setAccumulator(accumulator);
-        // TODO set flags
-        break;
+}
+
+void CpuCore::handleOneOneInstructionBlock()
+{
+    // TODO
+
+    const uint8_t instructionCode = mCurrentInstruction.instructionCode;
+    if (instructionCode == 0x37) // set carry flag
+    {
+        mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, true);
+        mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
+        mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+
+        increaseAndStoreProgramCounter();
+        return;
     }
-    case 0xE9: // jump to HL
+
+    if (instructionCode == 0x3F) // complement carry flag
+    {
+        const bool carryFlag = mAlu.flipValue(mRegisters.flagValue(Registers::FlagsPosition::carry_flag));
+
+        mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, carryFlag);
+        mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
+        mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+
+        increaseAndStoreProgramCounter();
+        return;
+    }
+
+
+    if (instructionCode == 0xE9) // jump to HL
     {
         mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl);
         mDataBus = mCurrentInstruction.instructionCode;
         
         increaseAndStoreProgramCounter();
-    }
-        // TODO
+        return;
     }
 }
 

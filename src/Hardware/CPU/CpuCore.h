@@ -40,15 +40,21 @@ public:
         subtract_plus_carry = 12,
     };
 
-    bool handleCurrentInstruction();
-    void decodeNewInstruction(uint8_t newInstruction);
+    void loadNewInstruction();
+    void handleCurrentInstruction();
     bool checkInstructionCondition(uint8_t instruction);
 
 private:
     void executeInstruction();
+    
+    void handleZeroZeroInstructionBlock();
+    void handleZeroOneInstructionBlock();
+    void handleOneZeroInstructionBlock();
+    void handleOneOneInstructionBlock();
 
     // convenience methods
     void increaseAndStoreProgramCounter();
+
     
     // methods for instructions
     void registerAddition();

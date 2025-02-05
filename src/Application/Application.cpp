@@ -12,12 +12,7 @@ Application::~Application()
 
 void Application::cpuLoop()
 {
-    const bool loadNewInstruction = mCpuCore->handleCurrentInstruction();
-
-    if (loadNewInstruction)
-    {
-        // mCpuCore->decodeNewInstruction();
-    }
+    mCpuCore->handleCurrentInstruction();
 }
 
 void Application::processInput()
