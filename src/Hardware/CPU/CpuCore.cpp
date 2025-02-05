@@ -218,9 +218,9 @@ void CpuCore::handleOneZeroInstructionBlock()
     const uint8_t instructionCode = mCurrentInstruction.instructionCode;
 
     // Arithmetic operations with the accumulator register
+    const uint8_t accumulatorValue = mRegisters.accumulator();
     const uint8_t arithmeticOperation = (instructionCode >> 3) & 0b111;
     const uint8_t registerOperand = instructionCode & 0b111;
-    const uint8_t accumulatorValue = mRegisters.accumulator();
 
     if (registerOperand == 0b110)
     {
@@ -235,17 +235,17 @@ void CpuCore::handleOneZeroInstructionBlock()
             const uint8_t result = mAlu.arithmeticOperation(accumulatorValue, mDataBus, arithmeticOperation);
             mRegisters.setAccumulator(result);
 
-            // TODO flags
+            setFlagsAfterArithmeticOperation(arithmeticOperation, result);
 
             mAddressBus = mRegisters.programCounter();
             mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
-            uint16_t programCounter = mRegisters.programCounter();
-            mIdu.increaseValue(programCounter);
-            mRegisters.setProgramCounter(programCounter);
+            
+            increaseAndStoreProgramCounter();
         }
     }
 
     const uint8_t secondRegister = mRegisters.smallRegisterValue(registerOperand);
+
 
 /*
     case 0x41: // load register (register)
@@ -308,6 +308,48 @@ void CpuCore::increaseAndStoreProgramCounter()
 {
     mIdu.increaseValue(mAddressBus);
     mRegisters.setProgramCounter(mAddressBus);
+}
+
+
+void CpuCore::setFlagsAfterArithmeticOperation(uint8_t operationType, uint8_t result)
+{
+    switch (static_cast<AluOperationType>(operationType))
+    {
+        case AluOperationType::add:
+        case AluOperationType::add_plus_carry:
+        {
+            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (((result >> 3) & 0b1) == 0b1));
+            mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, (((result >> 7) & 0b1) == 0b1));
+            break;
+        }
+        case AluOperationType::subtract:
+        case AluOperationType::subtract_plus_carry:
+        case AluOperationType::compare:
+        {
+            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, true);
+            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (((result >> 3) & 0b1) == 0b1));
+            mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, (((result >> 7) & 0b1) == 0b1));
+            break;
+        }
+        case AluOperationType::logical_and:
+        {
+            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, true);
+            mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, false);
+            break;
+        }
+        case AluOperationType::logical_xor:
+        case AluOperationType::logical_or:
+        {
+            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
+            mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, false);
+            break;
+        }
+    }
+
+    mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, (result == 0));
 }
 
 void CpuCore::registerAddition()
