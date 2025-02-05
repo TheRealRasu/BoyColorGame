@@ -149,19 +149,35 @@ void CpuCore::handleZeroOneInstructionBlock()
 {
     const uint8_t instructionCode = mCurrentInstruction.instructionCode;
 
+    const uint8_t firstOperand = (instructionCode >> 3) & 0b111;
+    const uint8_t secondOperand = instructionCode & 0b111;
 
-    if (instructionCode == 0x76) // special case: HALT
+    if (firstOperand == 0b110 && secondOperand == 0b110) // special case: HALT
     {
-        mAddressBus = mRegisters.programCounter();
-        mDataBus = mCurrentInstruction.instructionCode;
         mRegisters.setInterruptEnable(0);
 
         increaseAndStoreProgramCounter();
         return;
     }
 
-    const uint8_t firstOperand = (instructionCode >> 3) & 0b111;
-    const uint8_t secondOperand = instructionCode & 0b111;
+    if (firstOperand == 0b110) // special case: load into memory data at HL address
+    {
+        if (mCurrentInstruction.currentCycle == 0)
+        {
+            mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl);
+            mDataBus = mRegisters.smallRegisterValue(secondOperand);
+
+            mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
+        }
+        else if (mCurrentInstruction.currentCycle == 1)
+        {
+            mAddressBus = mRegisters.programCounter();
+            mDataBus = instructionCode;
+            increaseAndStoreProgramCounter();
+        }
+
+        return;
+    }
 
     if (secondOperand == 0b110) // sepcial case: get memory data at HL adress
     {
@@ -169,7 +185,6 @@ void CpuCore::handleZeroOneInstructionBlock()
         {
             mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl);
             mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
-            return;
         }
         else if (mCurrentInstruction.currentCycle == 1)
         {
@@ -181,15 +196,18 @@ void CpuCore::handleZeroOneInstructionBlock()
             mAddressBus = mRegisters.programCounter();
             mDataBus = mCurrentInstruction.instructionCode;
             increaseAndStoreProgramCounter();
-            return;
         }
+            
+        return;
     }
 
-    uint8_t destRegister = mRegisters.smallRegisterValue(firstOperand);
+    // if neither of the operands is equal to 0b110, other operations are simple one-cycle 'load A into B' instructions
+
+    uint8_t registerValue = mRegisters.smallRegisterValue(firstOperand);
     const uint8_t srcRegister = mRegisters.smallRegisterValue(secondOperand);
 
-    mAlu.assignRegisterValue(srcRegister, destRegister);
-    mRegisters.setSmallRegister(firstOperand, destRegister);
+    mAlu.assignRegisterValue(srcRegister, registerValue);
+    mRegisters.setSmallRegister(firstOperand, registerValue);
 
     increaseAndStoreProgramCounter();
     return;
@@ -204,7 +222,7 @@ void CpuCore::handleOneZeroInstructionBlock()
     const uint8_t registerOperand = instructionCode & 0b111;
     const uint8_t accumulatorValue = mRegisters.accumulator();
 
-    if (registerOperand == 0x06)
+    if (registerOperand == 0b110)
     {
         if (mCurrentInstruction.currentCycle == 0)
         {
