@@ -25,9 +25,10 @@ void CpuCore::loadNewInstruction()
     
     mCurrentInstruction.instructionCode = instructionCode;
     mCurrentInstruction.currentCycle = 0;
+    mCurrentInstruction.conditionMet = checkInstructionCondition(instructionCode);
 
-    const std::pair<uint8_t, uint8_t>& cycles = cyclesPerOpcode.at(instructionCode);
-    mCurrentInstruction.instructionCycles = checkInstructionCondition(instructionCode) ? cycles.first : cycles.second;
+    const std::pair<uint8_t, uint8_t> cycles = cyclesPerOpcode.at(instructionCode);
+    mCurrentInstruction.instructionCycles = mCurrentInstruction.conditionMet ? cycles.first : cycles.second;
 
     increaseAndStoreProgramCounter();
 }
@@ -95,6 +96,90 @@ void CpuCore::executeInstruction()
 void CpuCore::handleZeroZeroInstructionBlock()
 {
     const uint8_t instructionCode = mCurrentInstruction.instructionCode;
+
+    const uint8_t registerId = (instructionCode >> 3) & 0b111;
+    const uint8_t mainOperand = instructionCode & 0b111;
+
+    switch (mainOperand)
+    {
+        case 0b000:
+        {
+            // TODO
+            break;
+        }
+        case 0b001:
+        {
+            // TODO
+            break;
+        }
+        case 0b010:
+        {
+            // TODO
+            break;
+        }
+        case 0b011:
+        {
+            // TODO
+            break;
+        }
+        case 0b100: // increment register
+        {
+            if (registerId == 0b110) // special case: HL register
+            {
+                if (mCurrentInstruction.currentCycle == 0)
+                {
+                    mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl);
+                    mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+                }
+                else if (mCurrentInstruction.currentCycle == 1)
+                {
+                    const uint8_t newValue = mAlu.incrementRegister(mDataBus);
+                    mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
+
+                    mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, newValue == 0);
+                    mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+                    mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (newValue >> 3) & 0b1);
+                }
+                else if (mCurrentInstruction.currentCycle == 2)
+                {
+                    // do nothing; new instruction will be loaded
+                }
+
+                return;
+            }
+            
+            const uint8_t newRegisterValue = mAlu.incrementRegister(mRegisters.smallRegisterValue(registerId));
+            mRegisters.setSmallRegister(registerId, newRegisterValue);
+
+            mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, newRegisterValue == 0);
+            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (newRegisterValue >> 3) & 0b1);
+            break;
+        }
+        case 0b101:
+        {
+            // TODO
+            break;
+        }
+        case 0b110:
+        {
+            // TODO
+            break;
+        }
+        case 0b111:
+        {
+            // TODO
+            break;
+        }
+        default:
+        {
+            // nothing happens
+            break;
+        }
+    }
+
+/*
+    // TODO merge with mainOperand switch statement
     switch (instructionCode)
     {
         case 0x00:
@@ -140,6 +225,8 @@ void CpuCore::handleZeroZeroInstructionBlock()
             break;
         }
     }
+
+    */
 }
 
 void CpuCore::handleZeroOneInstructionBlock()
