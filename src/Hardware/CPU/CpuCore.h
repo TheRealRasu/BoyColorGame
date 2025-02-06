@@ -21,6 +21,8 @@ public:
         uint8_t instructionCode {};
         uint8_t instructionCycles {};
         uint8_t currentCycle {};
+
+        bool conditionMet { true };
     };
 
     enum class AluOperationType : uint8_t
