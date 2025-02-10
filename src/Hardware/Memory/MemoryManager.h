@@ -13,6 +13,6 @@ class MemoryManager
     void writeToMemoryAddress(const uint16_t address, const uint8_t value);
 
     protected:
-        std::vector<uint8_t> mRam;
-        std::vector<uint8_t> mVram;
+        std::vector<uint8_t> mWorkRam;
+        std::vector<uint8_t> mVideoRam;
 };
