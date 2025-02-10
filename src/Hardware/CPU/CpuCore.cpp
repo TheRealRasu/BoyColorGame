@@ -25,42 +25,9 @@ void CpuCore::loadNewInstruction()
     
     mCurrentInstruction.instructionCode = instructionCode;
     mCurrentInstruction.currentCycle = 0;
-    mCurrentInstruction.conditionMet = checkInstructionCondition(instructionCode);
-
-    const std::pair<uint8_t, uint8_t> cycles = cyclesPerOpcode.at(instructionCode);
-    mCurrentInstruction.instructionCycles = mCurrentInstruction.conditionMet ? cycles.first : cycles.second;
+    mCurrentInstruction.instructionCycles = cyclesPerOpcode.at(instructionCode);
 
     increaseAndStoreProgramCounter();
-}
-
-bool CpuCore::checkInstructionCondition(uint8_t instruction)
-{
-    switch (instruction)
-    {
-        case 0x20: return true; // TODO
-        case 0x28: return true; // TODO
-        case 0x30: return true; // TODO
-        case 0x38: return true; // TODO
-        case 0xC0: return true; // TODO
-        case 0xC2: return true; // TODO
-        case 0xC4: return true; // TODO
-        case 0xC8: return true; // TODO
-        case 0xCA: return true; // TODO
-        case 0xCC: return true; // TODO
-        case 0xD0: return true; // TODO
-        case 0xD2: return true; // TODO
-        case 0xD4: return true; // TODO
-        case 0xD8: return true; // TODO
-        case 0xDA: return true; // TODO
-        case 0xDC: return true; // TODO
-        default:
-        {
-            // do nothing and return true
-            break;
-        }
-    }
-    
-    return true;
 }
 
 void CpuCore::executeInstruction()
