@@ -71,7 +71,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
 
     switch (mainOperand)
     {
-        case 0b000:
+        case 0b000: // TODO
         {
             switch (registerId)
             {
@@ -80,38 +80,31 @@ void CpuCore::handleZeroZeroInstructionBlock()
                     // No operation
                     return;
                 }
-                case 0b001:
+                case 0b001: // TODO Stop
                 {
-                    // No operation
                     return;
                 }
                 default: break;
             }
         }
-        case 0b001:
+        case 0b001: // TODO
         {
-            // TODO
             break;
         }
-        case 0b010:
+        case 0b010: // Load data
         {
-            if (mCurrentInstruction.currentCycle == 0)
+            switch (registerId)
             {
-                if (registerId == 0b000)
+                case 0b000:
+                case 0b010:
                 {
-                    mAddressBus = mMemoryManager.getMemoryAtAddress(mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_bc));
+                    mAddressBus = mMemoryManager.getMemoryAtAddress(mRegisters.bigRegisterValue(operandToBigRegister(registerId)));
                     mDataBus = mRegisters.accumulator();
 
                     mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
+                    return;
                 }
-                else if (registerId == 0b010)
-                {
-                    mAddressBus = mMemoryManager.getMemoryAtAddress(mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_de));
-                    mDataBus = mRegisters.accumulator();
-
-                    mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
-                }
-                else if (registerId == 0b100)
+                case 0b100:
                 {
                     mAddressBus = mMemoryManager.getMemoryAtAddress(mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl));
                     mDataBus = mRegisters.accumulator();
@@ -120,8 +113,9 @@ void CpuCore::handleZeroZeroInstructionBlock()
 
                     const uint16_t newRegisterValue = mAlu.incrementRegister(mAddressBus);
                     mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_hl, newRegisterValue);
+                    return;
                 }
-                else if (registerId == 0b110)
+                case 0b110:
                 {
                     mAddressBus = mMemoryManager.getMemoryAtAddress(mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl));
                     mDataBus = mRegisters.accumulator();
@@ -130,16 +124,70 @@ void CpuCore::handleZeroZeroInstructionBlock()
 
                     const uint16_t newRegisterValue = mAlu.decrementRegister(mAddressBus);
                     mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_hl, newRegisterValue);
+                    return;
+                }
+                case 0b001:
+                {
+                    if (mCurrentInstruction.currentCycle == 0)
+                    {
+                        mAddressBus = mMemoryManager.getMemoryAtAddress(mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_bc));
+                        mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+                    }
+                    else
+                    {
+                        mRegisters.setAccumulator(mDataBus);
+                    }
+                }
+                case 0b011:
+                {
+                    if (mCurrentInstruction.currentCycle == 0)
+                    {
+                        mAddressBus = mMemoryManager.getMemoryAtAddress(mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_de));
+                        mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+                    }
+                    else
+                    {
+                        mRegisters.setAccumulator(mDataBus);
+                    }
+                }
+                case 0b101:
+                {
+                    if (mCurrentInstruction.currentCycle == 0)
+                    {
+                        uint16_t hlValue = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl);
+                        mAddressBus = mMemoryManager.getMemoryAtAddress(hlValue);
+                        mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+
+                        mIdu.increaseValue(hlValue);
+                        mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_hl, hlValue);
+                    }
+                    else
+                    {
+                        mRegisters.setAccumulator(mDataBus);
+                    }
+                }
+                case 0b111:
+                {
+                    if (mCurrentInstruction.currentCycle == 0)
+                    {
+                        uint16_t hlValue = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl);
+                        mAddressBus = mMemoryManager.getMemoryAtAddress(hlValue);
+                        mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+
+                        mIdu.decreaseValue(hlValue);
+                        mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_hl, hlValue);
+                    }
+                    else
+                    {
+                        mRegisters.setAccumulator(mDataBus);
+                    }
                 }
             }
-            else if (mCurrentInstruction.currentCycle == 1)
-            {
-                // nothing to do
-            }
+
+            return;
         }
-        case 0b011:
+        case 0b011: // TODO
         {
-            // TODO
             break;
         }
         case 0b100: // increment register
@@ -159,10 +207,6 @@ void CpuCore::handleZeroZeroInstructionBlock()
                     mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, newValue == 0);
                     mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
                     mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (newValue >> 3) & 0b1);
-                }
-                else if (mCurrentInstruction.currentCycle == 2)
-                {
-                    // do nothing; new instruction will be loaded
                 }
 
                 return;
@@ -194,10 +238,6 @@ void CpuCore::handleZeroZeroInstructionBlock()
                     mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, true);
                     mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (newValue >> 3) & 0b1);
                 }
-                else if (mCurrentInstruction.currentCycle == 2)
-                {
-                    // do nothing; new instruction will be loaded
-                }
 
                 return;
             }
@@ -224,10 +264,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
                     mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl);
                     mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
                 }
-                else if (mCurrentInstruction.currentCycle == 2)
-                {
-                    // do nothing; we're done
-                }
+                
                 break;
             }
 
@@ -414,16 +451,14 @@ void CpuCore::handleOneOneInstructionBlock()
 
     const uint8_t firstOperand = (instructionCode >> 3) & 0b111;
     const uint8_t mainOperand = instructionCode & 0b111;
-    // TODO
 
     switch (mainOperand)
     {
-        case 0b000: // various
+        case 0b000: // various; TODO
         {
-            // TODO
             break;
         }
-        case 0b001: // pop from stack + 4 special cases
+        case 0b001: // pop from stack + 4 special cases, TODO
         {
             if (firstOperand == 0b001) // RET
             {
@@ -492,19 +527,16 @@ void CpuCore::handleOneOneInstructionBlock()
             }
             break;
         }
-        case 0b010:
+        case 0b010: // TODO
         {
-            // TODO
-            break;
+            return;
         }
-        case 0b011:
+        case 0b011: // TODO
         {
-            // TODO
-            break;
+            return;
         }
-        case 0b100:
+        case 0b100: // TODO
         {
-            // TODO
             break;
         }
         case 0b101: // PUSH + one special case
@@ -610,9 +642,8 @@ void CpuCore::handleOneOneInstructionBlock()
                 }
             }
         }
-        case 0b110:
+        case 0b110: // TODO
         {
-            // TODO
             break;
         }
         case 0b111: // unconditional function call TODO
@@ -621,27 +652,6 @@ void CpuCore::handleOneOneInstructionBlock()
             
             break;
         }
-    }
-    if (instructionCode == 0x37) // set carry flag
-    {
-        mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, true);
-        mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
-        mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
-
-        increaseAndStoreProgramCounter();
-        return;
-    }
-
-    if (instructionCode == 0x3F) // complement carry flag
-    {
-        const bool carryFlag = mAlu.flipValue(mRegisters.flagValue(Registers::FlagsPosition::carry_flag));
-
-        mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, carryFlag);
-        mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
-        mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
-
-        increaseAndStoreProgramCounter();
-        return;
     }
 }
 
