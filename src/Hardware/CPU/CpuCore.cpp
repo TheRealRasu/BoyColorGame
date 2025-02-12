@@ -26,6 +26,8 @@ void CpuCore::loadNewInstruction()
     mCurrentInstruction.instructionCode = instructionCode;
     mCurrentInstruction.currentCycle = 0;
     mCurrentInstruction.instructionCycles = cyclesPerOpcode.at(instructionCode);
+    mCurrentInstruction.conditionMet = false;
+    mCurrentInstruction.temporalData.clear();
 
     increaseAndStoreProgramCounter();
 }
@@ -93,37 +95,23 @@ void CpuCore::handleZeroZeroInstructionBlock()
         }
         case 0b010:
         {
-            if (registerId == 0b000)
+            if (mCurrentInstruction.currentCycle == 0)
             {
-                if (mCurrentInstruction.currentCycle == 0)
+                if (registerId == 0b000)
                 {
                     mAddressBus = mMemoryManager.getMemoryAtAddress(mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_bc));
                     mDataBus = mRegisters.accumulator();
 
                     mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
                 }
-                else if (mCurrentInstruction.currentCycle == 1)
-                {
-                    // nothing to do
-                }
-            }
-            else if (registerId == 0b010)
-            {
-                if (mCurrentInstruction.currentCycle == 0)
+                else if (registerId == 0b010)
                 {
                     mAddressBus = mMemoryManager.getMemoryAtAddress(mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_de));
                     mDataBus = mRegisters.accumulator();
 
                     mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
                 }
-                else if (mCurrentInstruction.currentCycle == 1)
-                {
-                    // nothing to do
-                }
-            }
-            else if (registerId == 0b100)
-            {
-                if (mCurrentInstruction.currentCycle == 0)
+                else if (registerId == 0b100)
                 {
                     mAddressBus = mMemoryManager.getMemoryAtAddress(mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl));
                     mDataBus = mRegisters.accumulator();
@@ -133,14 +121,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
                     const uint16_t newRegisterValue = mAlu.incrementRegister(mAddressBus);
                     mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_hl, newRegisterValue);
                 }
-                else if (mCurrentInstruction.currentCycle == 1)
-                {
-                    // nothing to do
-                }
-            }
-            else if (registerId == 0b110)
-            {
-                if (mCurrentInstruction.currentCycle == 0)
+                else if (registerId == 0b110)
                 {
                     mAddressBus = mMemoryManager.getMemoryAtAddress(mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl));
                     mDataBus = mRegisters.accumulator();
@@ -150,13 +131,11 @@ void CpuCore::handleZeroZeroInstructionBlock()
                     const uint16_t newRegisterValue = mAlu.decrementRegister(mAddressBus);
                     mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_hl, newRegisterValue);
                 }
-                else if (mCurrentInstruction.currentCycle == 1)
-                {
-                    // nothing to do
-                }
             }
-            // TODO
-            break;
+            else if (mCurrentInstruction.currentCycle == 1)
+            {
+                // nothing to do
+            }
         }
         case 0b011:
         {
@@ -332,50 +311,6 @@ void CpuCore::handleZeroZeroInstructionBlock()
             break;
         }
     }
-
-/*
-    // TODO merge with mainOperand switch statement
-    switch (instructionCode)
-    {
-        case 0x01:
-        {
-            // TODO
-            break;
-        }
-        case 0x02:
-        {
-            if (mCurrentInstruction.currentCycle == 0)
-            {
-                mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_bc);
-                mDataBus = mRegisters.accumulator();
-                mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
-            }
-            else if (mCurrentInstruction.currentCycle == 1)
-            {
-                mAddressBus = mRegisters.programCounter();
-                mDataBus = mCurrentInstruction.instructionCode;
-
-                increaseAndStoreProgramCounter();
-
-                mRegisters.setInstructionRegister(mDataBus);
-            }
-            // TODO?
-            break;
-        }
-        case 0x2F: // complement accumulator
-        {
-            // instruction takes only one cycle; no need to check
-            uint8_t accumulator = mRegisters.accumulator();
-            mAlu.flipValue(accumulator);
-            mRegisters.setAccumulator(accumulator);
-
-            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, true);
-            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, true);
-            break;
-        }
-    }
-
-    */
 }
 
 void CpuCore::handleZeroOneInstructionBlock()
@@ -408,7 +343,7 @@ void CpuCore::handleZeroOneInstructionBlock()
         return;
     }
 
-    if (secondOperand == 0b110) // sepcial case: get memory data at HL adress
+    if (secondOperand == 0b110) // special case: get memory data at HL adress
     {
         if (mCurrentInstruction.currentCycle == 0)
         {
@@ -446,7 +381,7 @@ void CpuCore::handleOneZeroInstructionBlock()
     const uint8_t arithmeticOperation = (instructionCode >> 3) & 0b111;
     const uint8_t registerOperand = instructionCode & 0b111;
 
-    if (registerOperand == 0b110) // HL register instructions
+    if (registerOperand == 0b110) // special case: HL register instructions
     {
         if (mCurrentInstruction.currentCycle == 0)
         {
@@ -475,9 +410,218 @@ void CpuCore::handleOneZeroInstructionBlock()
 
 void CpuCore::handleOneOneInstructionBlock()
 {
+    const uint8_t instructionCode = mCurrentInstruction.instructionCode;
+
+    const uint8_t firstOperand = (instructionCode >> 3) & 0b111;
+    const uint8_t mainOperand = instructionCode & 0b111;
     // TODO
 
-    const uint8_t instructionCode = mCurrentInstruction.instructionCode;
+    switch (mainOperand)
+    {
+        case 0b000: // various
+        {
+            // TODO
+            break;
+        }
+        case 0b001: // pop from stack + 4 special cases
+        {
+            if (firstOperand == 0b001) // RET
+            {
+                // TODO
+                return;
+            }
+            else if (firstOperand == 0b011) // RETI
+            {
+                // TODO
+                return;
+            }
+            else if (firstOperand == 0b101) // jump to HL
+            {
+                mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl);
+                mRegisters.setProgramCounter(mAddressBus);
+                return;
+            }
+            else if (firstOperand == 0b111) // load stack pointer from HL
+            {
+                mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl);
+                mRegisters.setStackPointer(mAddressBus);
+                return;
+            }
+
+            switch (mCurrentInstruction.currentCycle)
+            {
+                case 0:
+                case 1:
+                {
+                    mAddressBus = mRegisters.stackPointer();
+                    mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+
+                    mCurrentInstruction.temporalData.push_back(mDataBus);
+
+                    increaseAndStoreStackPointer();
+                    break;
+                }
+                case 2:
+                {
+                    const std::vector<uint8_t>& temporalData = mCurrentInstruction.temporalData;
+                    const uint16_t newValue = temporalData.at(0) + (temporalData.at(1) << 8);
+                    
+                    mRegisters.setBigRegister(operandToBigRegister(firstOperand), newValue);
+                    break;
+                }
+                default:
+                {
+                    // do nothing; we're done here
+                    break;
+                }
+            }
+            if (mCurrentInstruction.currentCycle == 0)
+            {
+            }
+            else if (mCurrentInstruction.currentCycle == 1)
+            {
+                mAddressBus = mRegisters.stackPointer();
+                mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+
+                mCurrentInstruction.temporalData.push_back(mDataBus);
+                const uint8_t result = mAlu.arithmeticOperation(accumulatorValue, mDataBus, arithmeticOperation);
+                mRegisters.setAccumulator(result);
+
+                setFlagsAfterArithmeticOperation(arithmeticOperation, result);
+                return;
+            }
+            break;
+        }
+        case 0b010:
+        {
+            // TODO
+            break;
+        }
+        case 0b011:
+        {
+            // TODO
+            break;
+        }
+        case 0b100:
+        {
+            // TODO
+            break;
+        }
+        case 0b101: // PUSH + one special case
+        {
+            switch (firstOperand)
+            {
+                case 0b011:
+                case 0b101:
+                case 0b111:
+                {
+                    // no operation
+                    return;
+                }
+                case 0b001: // CALL nn
+                {
+                    switch (mCurrentInstruction.currentCycle)
+                    {
+                        case 0:
+                        case 1:
+                        {
+                            mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+                            mCurrentInstruction.temporalData.push_back(mDataBus);
+                            increaseAndStoreProgramCounter();
+                            break;
+                        }
+                        case 2:
+                        {
+                            mAddressBus = mRegisters.stackPointer();
+                            mDataBus = 0u;
+
+                            decreaseAndStoreStackPointer();
+                            break;
+                        }
+                        case 3:
+                        {
+                            mAddressBus = mRegisters.stackPointer();
+                            mDataBus = mRegisters.programCounter() >> 8;
+
+                            mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
+
+                            decreaseAndStoreStackPointer();
+                            break;
+                        }
+                        case 4:
+                        {
+                            mAddressBus = mRegisters.stackPointer();
+                            mDataBus = mRegisters.programCounter() & 0xFF;
+
+                            mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
+
+                            const std::vector<uint8_t>& temporalData = mCurrentInstruction.temporalData;
+                            const uint16_t newValue = temporalData.at(0) + (temporalData.at(1) << 8);
+                            mRegisters.setProgramCounter(newValue);
+                            break;
+                        }
+                        default:
+                        {
+                            // done here
+                            return;
+                        }
+                    }
+                }
+                case 0b000:
+                case 0b010:
+                case 0b100:
+                case 0b110:
+                {
+                    // Push to Stack
+                    switch (mCurrentInstruction.currentCycle)
+                    {
+                        case 0:
+                        {
+                            mAddressBus = mRegisters.stackPointer();
+                            mDataBus = 0u;
+
+                            decreaseAndStoreStackPointer();
+                            return;
+                        }
+                        case 1:
+                        {
+                            mAddressBus = mRegisters.stackPointer();
+                            mDataBus = mRegisters.bigRegisterValue(operandToBigRegister(firstOperand)) >> 8;
+
+                            mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
+                            decreaseAndStoreStackPointer();
+                            return;
+                        }
+                        case 2:
+                        {
+                            mAddressBus = mRegisters.stackPointer();
+                            mDataBus = mRegisters.bigRegisterValue(operandToBigRegister(firstOperand)) & 0xFF;
+
+                            mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
+                            return;
+                        }
+                        default:
+                        {
+                            // done here
+                            return;
+                        }
+                    }
+                    return;
+                }
+            }
+        }
+        case 0b110:
+        {
+            // TODO
+            break;
+        }
+        case 0b111: // unconditional function call TODO
+        {
+            unconditionalFunctionCall();
+            
+            break;
+        }
+    }
     if (instructionCode == 0x37) // set carry flag
     {
         mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, true);
@@ -499,15 +643,17 @@ void CpuCore::handleOneOneInstructionBlock()
         increaseAndStoreProgramCounter();
         return;
     }
+}
 
-
-    if (instructionCode == 0xE9) // jump to HL
+Registers::BigRegisterIdentifier CpuCore::operandToBigRegister(const uint8_t operand) const
+{
+    switch (operand)
     {
-        mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl);
-        mDataBus = mCurrentInstruction.instructionCode;
-        
-        increaseAndStoreProgramCounter();
-        return;
+        case 0b000: return Registers::BigRegisterIdentifier::register_bc;
+        case 0b010: return Registers::BigRegisterIdentifier::register_de;
+        case 0b100: return Registers::BigRegisterIdentifier::register_hl;
+        case 0b110: return Registers::BigRegisterIdentifier::register_af;
+        default: return Registers::BigRegisterIdentifier::register_bc;
     }
 }
 
@@ -515,6 +661,24 @@ void CpuCore::increaseAndStoreProgramCounter()
 {
     mIdu.increaseValue(mAddressBus);
     mRegisters.setProgramCounter(mAddressBus);
+}
+
+void CpuCore::decreaseAndStoreProgramCounter()
+{
+    mIdu.decreaseValue(mAddressBus);
+    mRegisters.setProgramCounter(mAddressBus);
+}
+
+void CpuCore::increaseAndStoreStackPointer()
+{
+    mIdu.increaseValue(mAddressBus);
+    mRegisters.setStackPointer(mAddressBus);
+}
+
+void CpuCore::decreaseAndStoreStackPointer()
+{
+    mIdu.decreaseValue(mAddressBus);
+    mRegisters.setStackPointer(mAddressBus);
 }
 
 void CpuCore::setFlagsAfterArithmeticOperation(uint8_t operationType, uint8_t result)
@@ -556,4 +720,40 @@ void CpuCore::setFlagsAfterArithmeticOperation(uint8_t operationType, uint8_t re
     }
 
     mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, (result == 0));
+}
+
+void CpuCore::unconditionalFunctionCall()
+{
+    if (mCurrentInstruction.currentCycle == 0)
+    {
+        uint16_t stackPointer = mRegisters.stackPointer();
+        mAddressBus = stackPointer;
+        mDataBus = 0u;
+        
+        decreaseAndStoreStackPointer();
+    }
+    else if (mCurrentInstruction.currentCycle == 1)
+    {
+        uint16_t stackPointer = mRegisters.stackPointer();
+        mAddressBus = stackPointer;
+
+        mDataBus = (mRegisters.programCounter() >> 8); // most significant byte
+        mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
+
+        decreaseAndStoreStackPointer();
+    }
+    else if (mCurrentInstruction.currentCycle == 2)
+    {
+        mAddressBus = mRegisters.stackPointer();
+
+        mDataBus = (mRegisters.programCounter() & 0xFF); // least significant byte
+        mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
+
+        const uint16_t newAddress = mCurrentInstruction.instructionCode & 0x38;
+        mRegisters.setProgramCounter(newAddress);
+    }
+    else if (mCurrentInstruction.currentCycle == 3)
+    {
+        // nothing left to do
+    }
 }
