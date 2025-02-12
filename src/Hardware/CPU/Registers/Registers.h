@@ -26,6 +26,7 @@ public:
     };
 
     // getters
+    uint16_t stackPointer() const;
     uint16_t programCounter() const;
     uint8_t accumulator() const;
 
@@ -35,6 +36,7 @@ public:
     uint16_t bigRegisterValue(const BigRegisterIdentifier identifier) const;
 
     // setters
+    void setStackPointer(const uint16_t newValue);
     void setProgramCounter(const uint16_t newValue);
     void setAccumulator(const uint8_t newValue);
     void setInstructionRegister(const uint8_t instruction);

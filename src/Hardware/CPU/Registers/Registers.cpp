@@ -6,6 +6,11 @@ Registers::Registers()
 Registers::~Registers()
 {}
 
+uint16_t Registers::stackPointer() const
+{
+    return mStackPointer;
+}
+
 uint16_t Registers::programCounter() const
 {
     return mProgramCounter;
@@ -70,6 +75,11 @@ uint16_t Registers::bigRegisterValue(const BigRegisterIdentifier identifier) con
     }
 
     return 0u;
+}
+
+void Registers::setStackPointer(const uint16_t newValue)
+{
+    mStackPointer = newValue;
 }
 
 void Registers::setProgramCounter(const uint16_t newValue)
