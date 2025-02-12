@@ -460,14 +460,12 @@ void CpuCore::handleOneOneInstructionBlock()
         }
         case 0b001: // pop from stack + 4 special cases, TODO
         {
-            if (firstOperand == 0b001) // RET
+            if (firstOperand == 0b001) // RET - TODO
             {
-                // TODO
                 return;
             }
-            else if (firstOperand == 0b011) // RETI
+            else if (firstOperand == 0b011) // RETI - TODO
             {
-                // TODO
                 return;
             }
             else if (firstOperand == 0b101) // jump to HL
@@ -483,6 +481,7 @@ void CpuCore::handleOneOneInstructionBlock()
                 return;
             }
 
+            // pop from stack
             switch (mCurrentInstruction.currentCycle)
             {
                 case 0:
@@ -510,21 +509,7 @@ void CpuCore::handleOneOneInstructionBlock()
                     break;
                 }
             }
-            if (mCurrentInstruction.currentCycle == 0)
-            {
-            }
-            else if (mCurrentInstruction.currentCycle == 1)
-            {
-                mAddressBus = mRegisters.stackPointer();
-                mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
 
-                mCurrentInstruction.temporalData.push_back(mDataBus);
-                const uint8_t result = mAlu.arithmeticOperation(accumulatorValue, mDataBus, arithmeticOperation);
-                mRegisters.setAccumulator(result);
-
-                setFlagsAfterArithmeticOperation(arithmeticOperation, result);
-                return;
-            }
             break;
         }
         case 0b010: // TODO
@@ -646,7 +631,7 @@ void CpuCore::handleOneOneInstructionBlock()
         {
             break;
         }
-        case 0b111: // unconditional function call TODO
+        case 0b111: // unconditional function call
         {
             unconditionalFunctionCall();
             
