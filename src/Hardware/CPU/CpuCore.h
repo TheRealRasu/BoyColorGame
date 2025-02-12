@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 #include "../Memory/MemoryManager.h"
 
@@ -21,6 +22,10 @@ public:
         uint8_t instructionCode {};
         uint8_t instructionCycles {};
         uint8_t currentCycle {};
+
+        std::vector<uint8_t> temporalData {};
+
+        bool conditionMet {};
     };
 
     enum class AluOperationType : uint8_t
@@ -47,10 +52,17 @@ private:
     void handleOneOneInstructionBlock();
 
     // convenience methods
+    Registers::BigRegisterIdentifier operandToBigRegister(const uint8_t operand) const;
+
     void increaseAndStoreProgramCounter();
+    void decreaseAndStoreProgramCounter();
+
+    void increaseAndStoreStackPointer();
+    void decreaseAndStoreStackPointer();
 
     // methods for instructions
     void setFlagsAfterArithmeticOperation(uint8_t operationType, uint8_t result);
+    void unconditionalFunctionCall();
 
     Alu mAlu;
     ControlUnit mControlUnit;
