@@ -64,13 +64,9 @@ uint16_t Registers::bigRegisterValue(const BigRegisterIdentifier identifier) con
         {
             return (mHRegister << 8) + mLRegister;
         }
-        case BigRegisterIdentifier::stack_pointer:
+        case BigRegisterIdentifier::register_af:
         {
-            return mStackPointer;
-        }
-        case BigRegisterIdentifier::program_counter:
-        {
-            return mProgramCounter;
+            return (mAccumulator << 8) + mFlagsRegister;
         }
     }
 
@@ -101,7 +97,6 @@ void Registers::setInterruptEnable(const uint8_t newValue)
 {
     mInterruptEnable = newValue;
 }
-
 
 void Registers::setFlagValue(FlagsPosition pos, bool value)
 {
@@ -187,14 +182,10 @@ void Registers::setBigRegister(const BigRegisterIdentifier identifier, const uin
             mLRegister = value & 0xFF;
             break;
         }
-        case BigRegisterIdentifier::stack_pointer:
+        case BigRegisterIdentifier::register_af:
         {
-            mStackPointer = value;
-            break;
-        }
-        case BigRegisterIdentifier::program_counter:
-        {
-            mProgramCounter = value;
+            mAccumulator = value >> 8;
+            mFlagsRegister = value & 0xFF;
             break;
         }
     }

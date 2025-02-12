@@ -13,8 +13,7 @@ public:
         register_bc = 0,
         register_de = 1,
         register_hl = 2,
-        stack_pointer = 3,
-        program_counter = 4
+        register_af = 3
     };
     
     enum class FlagsPosition : uint8_t
