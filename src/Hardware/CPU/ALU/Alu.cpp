@@ -29,85 +29,34 @@ uint8_t Alu::flipValue(const uint8_t value)
     return ~value;
 }
 
-uint8_t Alu::arithmeticOperation(const uint8_t firstValue, const uint8_t secondValue, const uint8_t arithmeticOpType) const
+uint8_t Alu::arithmeticOperation(const uint8_t firstValue, const uint8_t secondValue, const AluOperationType opType, bool additionalFlag) const
 {
-    switch (arithmeticOpType)
+    switch (opType)
     {
-        case 0b000: // add
+        case AluOperationType::add:
+        case AluOperationType::add_plus_carry:
         {
-            return firstValue + secondValue;
+            return firstValue + secondValue + !!additionalFlag;
         }
-        case 0b001: //adc
+        case AluOperationType::subtract:
+        case AluOperationType::subtract_plus_carry:
+        case AluOperationType::compare:
         {
-            // TODO
-            break;
+            return firstValue - secondValue - !!additionalFlag;
         }
-        case 0b010: // sub
-        {
-            return firstValue - secondValue;
-        }
-        case 0b011: // sbc
-        {
-            // TODO
-            break;
-        }
-        case 0b100: // and
+        case AluOperationType::logical_and:
         {
             return firstValue & secondValue;
         }
-        case 0b101: // xor
+        case AluOperationType::logical_xor:
         {
             return firstValue ^ secondValue;
         }
-        case 0b110: // or
+        case AluOperationType::logical_or:
         {
             return firstValue | secondValue;
-        }
-        case 0b111: //cp
-        {
-            // TODO
-            break;
-        }
-        default:
-        {
-            // do nothing
-            break;
         }
     }
 
     return 0u;
 }
-
-/*
-
-
-        case ArithmeticOperationType::set_carry_flag:
-        {
-            // TODO
-            break;
-        }
-        case ArithmeticOperationType::complement_accumulator:
-        {
-            // TODO
-            break;
-        }
-        case ArithmeticOperationType::complement_carry_flag:
-        {
-            // TODO
-            break;
-        }
-        case ArithmeticOperationType::decimal_adjust_accumulator:
-        {
-            // TODO
-            break;
-        }
-        case ArithmeticOperationType::increment:
-        {
-            // TODO
-            break;
-        }
-
-
-
-
-*/

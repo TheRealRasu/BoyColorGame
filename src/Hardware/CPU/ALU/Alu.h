@@ -13,21 +13,16 @@ public:
     Alu() = default;
     ~Alu() = default;
 
-    enum class ArithmeticOperationType
+    enum class AluOperationType : uint8_t
     {
-        add = 0,
-        add_plus_carry = 1,
-        compare = 2,
-        complement_accumulator = 3,
-        complement_carry_flag = 4,
-        decimal_adjust_accumulator = 5,
-        increment = 6,
-        logical_and = 7,
-        logical_or = 8,
-        logical_xor = 9,
-        set_carry_flag = 10,
-        subtract = 11,
-        subtract_plus_carry = 12,
+        add = 0b000,
+        add_plus_carry = 0b001,
+        subtract = 0b010,
+        subtract_plus_carry = 0b011,
+        logical_and = 0b100,
+        logical_xor = 0b101,
+        logical_or = 0b110,
+        compare = 0b111
     };
 
     template<typename T>
@@ -41,5 +36,5 @@ public:
 
     uint8_t flipValue(const uint8_t value);
 
-    uint8_t arithmeticOperation(const uint8_t firstValue, const uint8_t secondValue, const uint8_t arithmeticOpType) const;
+    uint8_t arithmeticOperation(const uint8_t firstValue, const uint8_t secondValue, const AluOperationType opType, bool additionalFlag = false) const;
 };
