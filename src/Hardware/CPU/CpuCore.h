@@ -28,18 +28,6 @@ public:
         bool conditionMet {};
     };
 
-    enum class AluOperationType : uint8_t
-    {
-        add = 0b000,
-        add_plus_carry = 0b001,
-        subtract = 0b010,
-        subtract_plus_carry = 0b011,
-        logical_and = 0b100,
-        logical_xor = 0b101,
-        logical_or = 0b110,
-        compare = 0b111
-    };
-
     void loadNewInstruction();
     void handleCurrentInstruction();
 
@@ -61,7 +49,7 @@ private:
     void decreaseAndStoreStackPointer();
 
     // methods for instructions
-    void setFlagsAfterArithmeticOperation(uint8_t operationType, uint8_t result);
+    void setFlagsAfterArithmeticOperation(Alu::AluOperationType operation, uint8_t result);
     void unconditionalFunctionCall();
 
     Alu mAlu;

@@ -415,7 +415,7 @@ void CpuCore::handleOneZeroInstructionBlock()
 
     // Arithmetic operations with the accumulator register
     const uint8_t accumulatorValue = mRegisters.accumulator();
-    const uint8_t arithmeticOperation = (instructionCode >> 3) & 0b111;
+    const Alu::AluOperationType operation = static_cast<Alu::AluOperationType>((instructionCode >> 3) & 0b111);
     const uint8_t registerOperand = instructionCode & 0b111;
 
     if (registerOperand == 0b110) // special case: HL register instructions
@@ -428,20 +428,34 @@ void CpuCore::handleOneZeroInstructionBlock()
         }
         else if (mCurrentInstruction.currentCycle == 1)
         {
-            const uint8_t result = mAlu.arithmeticOperation(accumulatorValue, mDataBus, arithmeticOperation);
-            mRegisters.setAccumulator(result);
+            const uint8_t result = mAlu.arithmeticOperation(accumulatorValue, mDataBus, operation);
+            
+            if (operation != Alu::AluOperationType::compare)
+            {
+                mRegisters.setAccumulator(result);
+            }
 
-            setFlagsAfterArithmeticOperation(arithmeticOperation, result);
+            setFlagsAfterArithmeticOperation(operation, result);
             return;
         }
     }
 
     const uint8_t secondRegister = mRegisters.smallRegisterValue(registerOperand);
 
-    const uint8_t result = mAlu.arithmeticOperation(accumulatorValue, secondRegister, arithmeticOperation);
-    mRegisters.setAccumulator(result);
+    bool additionalFlag {};
+    if ((operation == Alu::AluOperationType::add_plus_carry) || (operation == Alu::AluOperationType::subtract_plus_carry))
+    {
+        additionalFlag = mRegisters.flagValue(Registers::FlagsPosition::carry_flag);
+    }
 
-    setFlagsAfterArithmeticOperation(arithmeticOperation, result);
+    const uint8_t result = mAlu.arithmeticOperation(accumulatorValue, secondRegister, operation, additionalFlag);
+    
+    if (operation != Alu::AluOperationType::compare)
+    {
+        mRegisters.setAccumulator(result);
+    }
+
+    setFlagsAfterArithmeticOperation(operation, result);
     return;
 }
 
@@ -627,8 +641,24 @@ void CpuCore::handleOneOneInstructionBlock()
                 }
             }
         }
-        case 0b110: // TODO
+        case 0b110: // immediate data operation
         {
+            if (mCurrentInstruction.currentCycle == 0)
+            {
+                mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+                increaseAndStoreProgramCounter();
+            }
+            else if (mCurrentInstruction.currentCycle == 1)
+            {
+                // TODO handle all arithmetic operations
+
+                const uint8_t result = mRegisters.accumulator() + mDataBus;
+
+                mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, true); 
+                mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, true); 
+                mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, (result >> 7 & 0b1)); 
+                mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (result >> 3 & 0b1)); 
+            }
             break;
         }
         case 0b111: // unconditional function call
@@ -676,36 +706,36 @@ void CpuCore::decreaseAndStoreStackPointer()
     mRegisters.setStackPointer(mAddressBus);
 }
 
-void CpuCore::setFlagsAfterArithmeticOperation(uint8_t operationType, uint8_t result)
+void CpuCore::setFlagsAfterArithmeticOperation(Alu::AluOperationType operation, uint8_t result)
 {
-    switch (static_cast<AluOperationType>(operationType))
+    switch (operation)
     {
-        case AluOperationType::add:
-        case AluOperationType::add_plus_carry:
+        case Alu::AluOperationType::add:
+        case Alu::AluOperationType::add_plus_carry:
         {
             mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
             mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (((result >> 3) & 0b1) == 0b1));
             mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, (((result >> 7) & 0b1) == 0b1));
             break;
         }
-        case AluOperationType::subtract:
-        case AluOperationType::subtract_plus_carry:
-        case AluOperationType::compare:
+        case Alu::AluOperationType::subtract:
+        case Alu::AluOperationType::subtract_plus_carry:
+        case Alu::AluOperationType::compare:
         {
             mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, true);
             mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (((result >> 3) & 0b1) == 0b1));
             mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, (((result >> 7) & 0b1) == 0b1));
             break;
         }
-        case AluOperationType::logical_and:
+        case Alu::AluOperationType::logical_and:
         {
             mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
             mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, true);
             mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, false);
             break;
         }
-        case AluOperationType::logical_xor:
-        case AluOperationType::logical_or:
+        case Alu::AluOperationType::logical_xor:
+        case Alu::AluOperationType::logical_or:
         {
             mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
             mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
