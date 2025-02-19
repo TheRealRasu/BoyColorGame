@@ -51,6 +51,9 @@ private:
     // methods for instructions
     void setFlagsAfterArithmeticOperation(Alu::AluOperationType operation, uint8_t result);
     void unconditionalFunctionCall();
+    void conditionalFunctionCall();
+    void callAddress();
+    void conditionalReturnFromFunction();
 
     Alu mAlu;
     ControlUnit mControlUnit;
