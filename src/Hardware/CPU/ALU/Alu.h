@@ -34,7 +34,9 @@ public:
     template<typename T>
     void assignRegisterValue(const T& srcRegister, T& destRegister) const;
 
-    uint8_t flipValue(const uint8_t value);
+    void rotateValue(uint8_t& registerValue, bool& flagValue, const bool rotateRight, const bool throughCarry) const;
+
+    uint8_t flipValue(const uint8_t value) const;
 
     uint8_t arithmeticOperation(const uint8_t firstValue, const uint8_t secondValue, const AluOperationType opType, bool additionalFlag = false) const;
 };
