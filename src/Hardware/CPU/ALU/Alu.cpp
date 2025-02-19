@@ -76,8 +76,6 @@ void Alu::rotateValue(uint8_t& registerValue, bool& flagValue, const bool rotate
         
         flagValue = newFlag;
     }
-
-return;
 }
 
 uint8_t Alu::flipValue(const uint8_t value) const
