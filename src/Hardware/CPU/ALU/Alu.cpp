@@ -24,7 +24,7 @@ void Alu::assignRegisterValue(const T& srcRegister, T& destRegister) const
 template void Alu::assignRegisterValue<uint8_t>(const uint8_t& srcRegister, uint8_t& destRegister) const;
 template void Alu::assignRegisterValue<uint16_t>(const uint16_t& srcRegister, uint16_t& destRegister) const;
 
-void rotateValue(uint8_t& registerValue, bool& flagValue, const bool rotateRight, const bool throughCarry) const
+void Alu::rotateValue(uint8_t& registerValue, bool& flagValue, const bool rotateRight, const bool throughCarry) const
 {
     // const uint8_t rightShift = rotateRight ? 0u : 7u;
     // const uint8_t leftShift = 7u - rightShift;
