@@ -79,7 +79,22 @@ void CpuCore::handleZeroZeroInstructionBlock()
                     // No operation
                     return;
                 }
-                case 0b001: // TODO Stop
+                case 0b001: // TODO LD (nn), SP
+                {
+                    return;
+                }
+                case 0b010: // TODO Stop
+                {
+                    return;
+                }
+                case 0b011: // TODO JR e
+                {
+                    return;
+                }
+                case 0b100: // TODO JR NZ, e
+                case 0b101: // TODO JR Z, e
+                case 0b110: // TODO JR NC, e
+                case 0b111: // TODO JR C, e
                 {
                     return;
                 }
@@ -88,6 +103,8 @@ void CpuCore::handleZeroZeroInstructionBlock()
         }
         case 0b001: // TODO
         {
+            // TODO: LD XX, nn
+            // TODO: ADD HL, XX
             break;
         }
         case 0b010: // Load data
@@ -187,6 +204,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
         }
         case 0b011: // TODO
         {
+            // TODO INC/DEC XX
             break;
         }
         case 0b100: // increment register
