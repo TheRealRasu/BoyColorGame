@@ -282,28 +282,29 @@ void CpuCore::handleZeroZeroInstructionBlock()
 
             break;
         }
-        case 0b111: // some TODOs
+        case 0b111: // one TODO
         {
             switch (registerId)
             {
-                case 0b000: // RLCA TODO
+                case 0b000: // RLCA
+                case 0b001: // RRCA
+                case 0b010: // RLA
+                case 0b011: // RRA
                 {
-                    // TODO
-                    return;
-                }
-                case 0b001: // RRCA TODO
-                {
-                    // TODO
-                    return;
-                }
-                case 0b010: // RLA TODO
-                {
-                    // TODO
-                    return;
-                }
-                case 0b011: // RRA TODO
-                {
-                    // TODO
+                    uint8_t accumulatorValue = mRegisters.accumulator();
+                    bool carryFlag = mRegisters.flagValue(Registers::FlagsPosition::carry_flag);
+                    
+                    const bool rotateRight = registerId & 0b1;
+                    const bool throughCarry = (registerId >> 1) & 0b1;
+
+                    mAlu.rotateValue(accumulatorValue, carryFlag, rotateRight, throughCarry);
+
+                    mRegisters.setAccumulator(accumulatorValue);
+                    mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, carryFlag);
+
+                    // TODO check if these flag assignments are accurate
+                    mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
+                    mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
                     return;
                 }
                 case 0b100: // DAA TODO
@@ -397,7 +398,7 @@ void CpuCore::handleZeroOneInstructionBlock()
         return;
     }
 
-    // if neither of the operands is equal to 0b110, other operations are simple one-cycle 'load A into B' instructions
+    // if neither of the operands is equal to 0b110, other operations are simple one-cycle 'load X into Y' instructions
 
     uint8_t registerValue = mRegisters.smallRegisterValue(firstOperand);
     const uint8_t srcRegister = mRegisters.smallRegisterValue(secondOperand);
