@@ -190,3 +190,28 @@ void Registers::setBigRegister(const BigRegisterIdentifier identifier, const uin
         }
     }
 }
+
+bool Registers::checkFlagCondition(FlagCondition condition)
+{
+    switch (condition)
+    {
+        case FlagCondition::condition_nz:
+        {
+            return flagValue(FlagsPosition::zero_flag) == false;
+        }
+        case FlagCondition::condition_z:
+        {
+            return flagValue(FlagsPosition::zero_flag);
+        }
+        case FlagCondition::condition_nc:
+        {
+            return flagValue(FlagsPosition::carry_flag) == false;
+        }
+        case FlagCondition::condition_c:
+        {
+            return flagValue(FlagsPosition::carry_flag);
+        }
+    }
+
+    return false;
+}

@@ -8,6 +8,14 @@ public:
     Registers();
     ~Registers();
 
+    enum class FlagCondition : uint8_t
+    {
+        condition_nz = 0b000,
+        condition_z = 0b001,
+        condition_nc = 0b010,
+        condition_c = 0b011
+    };
+
     enum class BigRegisterIdentifier : uint8_t
     {
         register_bc = 0,
@@ -45,6 +53,9 @@ public:
 
     void setSmallRegister(const uint8_t identifier, const uint8_t value);
     void setBigRegister(const BigRegisterIdentifier identifier, const uint16_t value);
+
+    // misc.
+    bool checkFlagCondition(FlagCondition condition);
 
 protected:
     uint8_t mInstructionRegister {};
