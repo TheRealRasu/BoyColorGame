@@ -103,8 +103,59 @@ void CpuCore::handleZeroZeroInstructionBlock()
         }
         case 0b001: // TODO
         {
-            // TODO: LD XX, nn
-            // TODO: ADD HL, XX
+            if (registerId & 0b1) // TODO: ADD HL, XX
+            {
+                if (mCurrentInstruction.currentCycle == 0)
+                {
+                    mAddressBus = 0x0000;
+
+                    uint8_t lValue = mRegisters.smallRegisterValue(0b101);
+                    
+                    // TODO: first addition
+                    mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+                }
+                else if (mCurrentInstruction.currentCycle == 1)
+                {
+                    uint8_t hValue = mRegisters.smallRegisterValue(0b100);
+
+                    // TODO: second addition
+                    mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+                }
+            }
+            else // LD rr, nn
+            {
+                if (mCurrentInstruction.currentCycle == 0 || mCurrentInstruction.currentCycle == 1)
+                {
+                    mAddressBus = mRegisters.programCounter();
+                    mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+
+                    mCurrentInstruction.temporalData.push_back(mDataBus);
+                    increaseAndStoreProgramCounter();
+                    break;
+                }
+                else if (mCurrentInstruction.currentCycle == 2)
+                {
+                    const std::vector<uint8_t>& tempData = mCurrentInstruction.temporalData;
+                    const uint16_t newValue = tempData.at(0) + (tempData.at(1) << 8);
+
+                    if (registerId == 0b000)
+                    {
+                        mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_bc, newValue);
+                    }
+                    else if (registerId == 0b010)
+                    {
+                        mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_de, newValue);
+                    }
+                    else if (registerId == 0b100)
+                    {
+                        mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_hl, newValue);
+                    }
+                    else if (registerId == 0b110)
+                    {
+                        mRegisters.setStackPointer(newValue);
+                    }
+                }
+            }
             break;
         }
         case 0b010: // Load data
@@ -202,9 +253,54 @@ void CpuCore::handleZeroZeroInstructionBlock()
 
             return;
         }
-        case 0b011: // TODO
+        case 0b011: // INC/DEC rr
         {
-            // TODO INC/DEC XX
+            if (mCurrentInstruction.currentCycle == 0)
+            {
+                if (uint8_t identifier = (registerId >> 1) & 0b11; identifier == 0b00)
+                {
+                    mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_bc);
+                }
+                else if (identifier == 0b01)
+                {
+                    mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_de);
+                }
+                else if (identifier == 0b01)
+                {
+                    mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl);
+                }
+                else if (identifier == 0b01)
+                {
+                    mAddressBus = mRegisters.stackPointer();
+                }
+
+                if (registerId & 0b1)
+                {
+                    mIdu.increaseValue(mAddressBus);
+                }
+                else
+                {
+                    mIdu.decreaseValue(mAddressBus);
+                }
+
+                if (uint8_t identifier = (registerId >> 1) & 0b11; identifier == 0b00)
+                {
+                    mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_bc, mAddressBus);
+                }
+                else if (identifier == 0b01)
+                {
+                    mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_de, mAddressBus);
+                }
+                else if (identifier == 0b01)
+                {
+                    mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_hl, mAddressBus);
+                }
+                else if (identifier == 0b01)
+                {
+                    mRegisters.setStackPointer(mAddressBus);
+                }
+            }
+
             break;
         }
         case 0b100: // increment register
