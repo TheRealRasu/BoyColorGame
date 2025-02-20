@@ -79,11 +79,37 @@ void CpuCore::handleZeroZeroInstructionBlock()
                     // No operation
                     return;
                 }
-                case 0b001: // TODO LD (nn), SP
+                case 0b001: // load from stack pointer
                 {
+                    if ((mCurrentInstruction.currentCycle == 0) || (mCurrentInstruction.currentCycle == 1))
+                    {
+                        mAddressBus = mRegisters.programCounter();
+                        mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+
+                        mCurrentInstruction.temporalData.push_back(mDataBus);
+                    }
+                    else if (mCurrentInstruction.currentCycle == 2)
+                    {
+                        const std::vector<uint8_t>& tempData = mCurrentInstruction.temporalData;
+
+                        mAddressBus = tempData.at(0) + (tempData.at(1) << 8);
+                        mDataBus = mRegisters.stackPointer() & 0xFF;
+
+                        mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
+                        mAddressBus++;
+                    }
+                    else if (mCurrentInstruction.currentCycle == 3)
+                    {
+                        mDataBus = (mRegisters.stackPointer() >> 8) & 0xFF;
+                        mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
+                    }
+                    else if (mCurrentInstruction.currentCycle == 4)
+                    {
+                        // nothing left to do
+                    }
                     return;
                 }
-                case 0b010: // TODO Stop
+                case 0b010: // TODO Stop. Consult with CPU documents
                 {
                     return;
                 }
@@ -91,12 +117,57 @@ void CpuCore::handleZeroZeroInstructionBlock()
                 {
                     return;
                 }
-                case 0b100: // TODO JR NZ, e
-                case 0b101: // TODO JR Z, e
-                case 0b110: // TODO JR NC, e
-                case 0b111: // TODO JR C, e
+                case 0b100: // JR NZ, e
+                case 0b101: // JR Z, e
+                case 0b110: // JR NC, e
+                case 0b111: // JR C, e
                 {
-                    return;
+                    if (mCurrentInstruction.currentCycle == 0)
+                    {
+                        mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+                        mCurrentInstruction.temporalData.push_back(mDataBus);
+
+                        const Registers::FlagCondition operandCode = static_cast<Registers::FlagCondition>(registerId & 0b11);
+                        mCurrentInstruction.conditionMet = mRegisters.checkFlagCondition(operandCode);
+
+                        if (mCurrentInstruction.conditionMet)
+                        {
+                            mCurrentInstruction.instructionCycles = 3;
+                        }
+
+                        increaseAndStoreProgramCounter();
+                    }
+                    else if (mCurrentInstruction.currentCycle == 1)
+                    {
+                        if (mCurrentInstruction.conditionMet == false) return;
+
+                        const uint8_t pcLow = mRegisters.programCounter() & 0xFF;
+                        const uint8_t firstResult = mCurrentInstruction.temporalData.at(0) + pcLow;
+                        mCurrentInstruction.temporalData.at(0) = firstResult;
+
+                        const bool carryBit = (mDataBus >> 7) & 0b1;
+                        const bool resultCarry = (firstResult >> 7) & 0b1;
+                        
+                        uint8_t adj = 0;
+                        if (resultCarry && !carryBit)
+                        {
+                            adj = 1;
+                        }
+                        else if (!resultCarry && carryBit)
+                        {
+                            adj = -1;
+                        }
+
+                        const uint8_t secondResult = ((mRegisters.programCounter() >> 8) & 0xFF) + adj;
+                        mCurrentInstruction.temporalData.push_back(secondResult);
+                    }
+                    else if (mCurrentInstruction.currentCycle == 2)
+                    {
+                        const std::vector<uint8_t>& tempData = mCurrentInstruction.temporalData;
+                        const uint16_t newProgramCounter = tempData.at(0) + (tempData.at(1) << 8);
+
+                        mRegisters.setProgramCounter(newProgramCounter);
+                    }
                 }
                 default: break;
             }
@@ -110,7 +181,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
                     mAddressBus = 0x0000;
 
                     uint8_t lValue = mRegisters.smallRegisterValue(0b101);
-                    
+
                     // TODO: first addition
                     mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
                 }
@@ -421,7 +492,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
                     mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
                     return;
                 }
-                case 0b100: // DAA TODO
+                case 0b100: // DAA TODO. Consult with CPU documents
                 {
                     // TODO
                     return;
