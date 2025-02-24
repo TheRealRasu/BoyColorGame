@@ -1,20 +1,20 @@
 #include "Alu.h"
 
 template<typename T>
-T Alu::incrementRegister(const T givenRegister) const
+void Alu::incrementRegister(T& givenRegister) const
 {
-    return givenRegister + 1;
+    givenRegister++;
 }
-template uint8_t Alu::incrementRegister<uint8_t>(const uint8_t givenRegister) const;
-template uint16_t Alu::incrementRegister<uint16_t>(const uint16_t givenRegister) const;
+template void Alu::incrementRegister<uint8_t>(uint8_t& givenRegister) const;
+template void Alu::incrementRegister<uint16_t>(uint16_t& givenRegister) const;
 
 template<typename T>
-T Alu::decrementRegister(const T givenValue) const
+void Alu::decrementRegister(T& givenValue) const
 {
-    return givenValue - 1;
+    givenValue--;
 }
-template uint8_t Alu::decrementRegister<uint8_t>(const uint8_t givenValue) const;
-template uint16_t Alu::decrementRegister<uint16_t>(const uint16_t givenValue) const;
+template void Alu::decrementRegister<uint8_t>(uint8_t& givenValue) const;
+template void Alu::decrementRegister<uint16_t>(uint16_t& givenValue) const;
 
 template<typename T>
 void Alu::assignRegisterValue(const T& srcRegister, T& destRegister) const
@@ -78,7 +78,7 @@ void Alu::rotateValue(uint8_t& registerValue, bool& flagValue, const bool rotate
     }
 }
 
-uint8_t Alu::flipValue(const uint8_t value) const
+uint8_t Alu::flipValue(uint8_t& value) const
 {
     return ~value;
 }
