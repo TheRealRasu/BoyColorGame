@@ -113,8 +113,47 @@ void CpuCore::handleZeroZeroInstructionBlock()
                 {
                     return;
                 }
-                case 0b011: // TODO JR e
+                case 0b011: // JR e
                 {
+                    if (mCurrentInstruction.currentCycle == 0)
+                    {
+                        mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+                        mCurrentInstruction.temporalData.push_back(mDataBus);
+
+                        increaseAndStoreProgramCounter();
+                    }
+                    else if (mCurrentInstruction.currentCycle == 1)
+                    {
+                        std::vector<uint8_t>& tempDataVec = mCurrentInstruction.temporalData;
+                        mAddressBus = mRegisters.programCounter();
+                        uint8_t& tempData = tempDataVec.at(0);
+                        const bool dataBusSigned = (tempData >> 7) & 0b1;
+
+                        const uint8_t lowByte = mAddressBus & 0xFF;
+                        tempData += lowByte;
+
+                        const bool resultSigned = (tempData >> 7) & 0b1;
+
+                        int8_t extraValue = 0; 
+                        if (resultSigned && !dataBusSigned)
+                        {
+                            extraValue = 1;
+                        }
+                        else if (!resultSigned && dataBusSigned)
+                        {
+                            extraValue = -1;
+                        }
+
+                        const uint8_t nextTempData = ((mAddressBus >> 8) & 0xFF) + extraValue;
+                        tempDataVec.push_back(nextTempData);
+                    }
+                    else if (mCurrentInstruction.currentCycle == 2)
+                    {
+                        const std::vector<uint8_t>& tempData = mCurrentInstruction.temporalData;
+                        const uint16_t newProgramCounter = tempData.at(0) + (tempData.at(1) << 8);
+
+                        mRegisters.setProgramCounter(newProgramCounter);
+                    }
                     return;
                 }
                 case 0b100: // JR NZ, e
@@ -180,7 +219,25 @@ void CpuCore::handleZeroZeroInstructionBlock()
                 {
                     mAddressBus = 0x0000;
 
-                    uint8_t lValue = mRegisters.smallRegisterValue(0b101);
+                    // addition of lsb's
+                    const uint16_t hlValue = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl);
+
+                if (uint8_t identifier = (registerId >> 1) & 0b11; identifier == 0b00)
+                {
+                    mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_bc);
+                }
+                else if (identifier == 0b01)
+                {
+                    mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_de);
+                }
+                else if (identifier == 0b01)
+                {
+                    mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl);
+                }
+                else if (identifier == 0b01)
+                {
+                    mAddressBus = mRegisters.stackPointer();
+                }
 
                     // TODO: first addition
                     mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
@@ -249,7 +306,8 @@ void CpuCore::handleZeroZeroInstructionBlock()
 
                     mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
 
-                    const uint16_t newRegisterValue = mAlu.incrementRegister(mAddressBus);
+                    uint16_t newRegisterValue = mAddressBus;
+                    mAlu.incrementRegister(newRegisterValue);
                     mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_hl, newRegisterValue);
                     return;
                 }
@@ -260,7 +318,8 @@ void CpuCore::handleZeroZeroInstructionBlock()
 
                     mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
 
-                    const uint16_t newRegisterValue = mAlu.decrementRegister(mAddressBus);
+                    uint16_t newRegisterValue = mAddressBus;
+                    mAlu.decrementRegister(newRegisterValue);
                     mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_hl, newRegisterValue);
                     return;
                 }
@@ -385,8 +444,9 @@ void CpuCore::handleZeroZeroInstructionBlock()
                 }
                 else if (mCurrentInstruction.currentCycle == 1)
                 {
-                    const uint8_t newValue = mAlu.incrementRegister(mDataBus);
-                    mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
+                    uint8_t newValue = mDataBus;
+                    mAlu.incrementRegister(newValue);
+                    mMemoryManager.writeToMemoryAddress(mAddressBus, newValue);
 
                     mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, newValue == 0);
                     mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
@@ -396,7 +456,8 @@ void CpuCore::handleZeroZeroInstructionBlock()
                 return;
             }
             
-            const uint8_t newRegisterValue = mAlu.incrementRegister(mRegisters.smallRegisterValue(registerId));
+            uint8_t newRegisterValue = mRegisters.smallRegisterValue(registerId);
+            mAlu.incrementRegister(newRegisterValue);
             mRegisters.setSmallRegister(registerId, newRegisterValue);
 
             mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, newRegisterValue == 0);
@@ -415,8 +476,9 @@ void CpuCore::handleZeroZeroInstructionBlock()
                 }
                 else if (mCurrentInstruction.currentCycle == 1)
                 {
-                    const uint8_t newValue = mAlu.decrementRegister(mDataBus);
-                    mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
+                    uint8_t newValue = mDataBus;
+                    mAlu.decrementRegister(newValue);
+                    mMemoryManager.writeToMemoryAddress(mAddressBus, newValue);
 
                     mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, newValue == 0);
                     mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, true);
@@ -426,7 +488,8 @@ void CpuCore::handleZeroZeroInstructionBlock()
                 return;
             }
             
-            const uint8_t newRegisterValue = mAlu.decrementRegister(mRegisters.smallRegisterValue(registerId));
+            uint8_t newRegisterValue = mRegisters.smallRegisterValue(registerId);
+            mAlu.decrementRegister(newRegisterValue);
             mRegisters.setSmallRegister(registerId, newRegisterValue);
 
             mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, newRegisterValue == 0);
@@ -535,7 +598,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
     }
 }
 
-void CpuCore::handleZeroOneInstructionBlock()
+void CpuCore::handleZeroOneInstructionBlock() // DONE
 {
     const uint8_t instructionCode = mCurrentInstruction.instructionCode;
 
@@ -594,7 +657,7 @@ void CpuCore::handleZeroOneInstructionBlock()
     return;
 }
 
-void CpuCore::handleOneZeroInstructionBlock()
+void CpuCore::handleOneZeroInstructionBlock() // DONE
 {
     const uint8_t instructionCode = mCurrentInstruction.instructionCode;
 
@@ -863,8 +926,6 @@ void CpuCore::handleOneOneInstructionBlock()
                         case 0:
                         {
                             mAddressBus = mRegisters.stackPointer();
-                            mDataBus = 0u;
-
                             decreaseAndStoreStackPointer();
                             return;
                         }
@@ -1008,8 +1069,6 @@ void CpuCore::unconditionalFunctionCall()
     if (mCurrentInstruction.currentCycle == 0)
     {
         mAddressBus = mRegisters.stackPointer();
-        mDataBus = 0u;
-        
         decreaseAndStoreStackPointer();
     }
     else if (mCurrentInstruction.currentCycle == 1)
@@ -1072,8 +1131,6 @@ void CpuCore::conditionalFunctionCall()
             if (mCurrentInstruction.conditionMet == false) break; // nothing left to do
 
             mAddressBus = mRegisters.stackPointer();
-            mDataBus = 0u;
-
             decreaseAndStoreStackPointer();
 
             break;
@@ -1125,8 +1182,6 @@ void CpuCore::callAddress()
         case 2:
         {
             mAddressBus = mRegisters.stackPointer();
-            mDataBus = 0u;
-
             decreaseAndStoreStackPointer();
             break;
         }
