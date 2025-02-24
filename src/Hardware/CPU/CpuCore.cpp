@@ -718,7 +718,7 @@ void CpuCore::handleOneOneInstructionBlock()
     {
         case 0b000: // various; TODO
         {
-            if (firstOperand == 0b100)
+            if (firstOperand == 0b100) // LDH (n)
             {
                 switch (mCurrentInstruction.currentCycle)
                 {
@@ -744,11 +744,33 @@ void CpuCore::handleOneOneInstructionBlock()
                     }
                 }
             }
-            else if (firstOperand == 0b101)
+            else if (firstOperand == 0b101) // TODO ADD SP, e
             {
+                if (const uint8_t curr = mCurrentInstruction.currentCycle; curr == 0)
+                {
+                    mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+                    increaseAndStoreProgramCounter();
+                }
+                else if (curr == 1)
+                {
+                    mAddressBus = 0x0000;
+
+                    mDataBus += (mRegisters.stackPointer() & 0xFF);
+
+                    mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, false);
+                    mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+                    mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (mDataBus >> 3 & 0b1));
+                    mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, (mDataBus >> 7 & 0b1));
+
+                    mCurrentInstruction.temporalData.push_back(mDataBus);
+                }
+                else if (curr == 2)
+                {
+
+                }
                 // TODO ADD SP, e
             }
-            else if (firstOperand == 0b110)
+            else if (firstOperand == 0b110) // LDH A, (n)
             {
                 switch (mCurrentInstruction.currentCycle)
                 {
@@ -777,7 +799,7 @@ void CpuCore::handleOneOneInstructionBlock()
                     }
                 }
             }
-            else if (firstOperand == 0b111)
+            else if (firstOperand == 0b111) // LD HL, SP+e
             {
                 // TODO LD HL, SP+e
             }
