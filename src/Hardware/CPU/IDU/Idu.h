@@ -12,12 +12,17 @@ public:
     Idu() = default;
     ~Idu() = default;
 
-    template<typename T>
-    void increaseValue(T& givenValue) const;
+    uint16_t memory() const;
+    void resetMemory();
+
+    void increaseValue(uint16_t& givenValue) const;
 
     template<typename T>
     void decreaseValue(T& givenValue) const;
 
     template<typename T>
     void assignValue(const T& valueSrc, T& valueDst) const;
+
+private:
+    uint16_t mMemory {};
 };

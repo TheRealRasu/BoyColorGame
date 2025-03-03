@@ -1,12 +1,19 @@
 #include "Idu.h"
 
-template<typename T>
-void Idu::increaseValue(T& givenValue) const
+uint16_t Idu::memory() const
+{
+    return mMemory;
+}
+
+void Idu::resetMemory()
+{
+    mMemory = 0u;
+}
+
+void Idu::increaseValue(uint16_t& givenValue) const
 {
     givenValue++;
 }
-template void Idu::increaseValue<uint8_t>(uint8_t& givenValue) const;
-template void Idu::increaseValue<uint16_t>(uint16_t& givenValue) const;
 
 template<typename T>
 void Idu::decreaseValue(T& givenValue) const
