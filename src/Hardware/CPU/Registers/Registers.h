@@ -21,7 +21,8 @@ public:
         register_bc = 0,
         register_de = 1,
         register_hl = 2,
-        register_af = 3
+        register_af = 3,
+        register_sp = 4
     };
     
     enum class FlagsPosition : uint8_t
