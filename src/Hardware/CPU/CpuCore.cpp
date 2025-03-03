@@ -1,9 +1,12 @@
 #include "CpuCore.h"
 
 #include "OpcodeCycleMap.h"
+#include <cstdint>
 
 CpuCore::CpuCore()
-{}
+    : mIdu(mRegisters)
+{
+}
 
 void CpuCore::handleCurrentInstruction()
 {
@@ -1051,7 +1054,7 @@ void CpuCore::handleOneOneInstructionBlock()
                         case 2:
                         {
                             mAddressBus = mRegisters.stackPointer();
-                            mDataBus = mRegisters.bigRegisterValue(operandToBigRegister(firstOperand)) & 0xFF;
+                            mDataBus = static_cast<uint8_t>(mRegisters.bigRegisterValue(operandToBigRegister(firstOperand)) & 0xFF);
 
                             mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
                             return;
@@ -1097,7 +1100,7 @@ void CpuCore::handleOneOneInstructionBlock()
     }
 }
 
-Registers::BigRegisterIdentifier CpuCore::operandToBigRegister(const uint8_t operand, const uint8_t instructionBlock, const bool includeSpAl) const
+Registers::BigRegisterIdentifier CpuCore::operandToBigRegister(const uint8_t operand/*, const uint8_t instructionBlock, const bool includeSpAl*/) const
 {
     switch (operand)
     {
@@ -1108,7 +1111,7 @@ Registers::BigRegisterIdentifier CpuCore::operandToBigRegister(const uint8_t ope
         default: break;
     }
 
-    Registers::BigRegisterIdentifier::register_bc;
+    return Registers::BigRegisterIdentifier::register_bc;
 }
 
 void CpuCore::increaseAndStoreProgramCounter()

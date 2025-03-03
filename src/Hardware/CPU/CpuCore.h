@@ -40,7 +40,7 @@ private:
     void handleOneOneInstructionBlock();
 
     // convenience methods
-    Registers::BigRegisterIdentifier operandToBigRegister(const uint8_t operand, const uint8_t instructionBlock, const bool includeSpAl) const;
+    Registers::BigRegisterIdentifier operandToBigRegister(const uint8_t operand/*, const uint8_t instructionBlock, const bool includeSpAl*/) const;
 
     void increaseAndStoreProgramCounter();
     void decreaseAndStoreProgramCounter();
@@ -57,8 +57,8 @@ private:
 
     Alu mAlu;
     ControlUnit mControlUnit;
-    Idu mIdu;
     Registers mRegisters;
+    Idu mIdu;
     MemoryManager mMemoryManager;
 
     Instruction mCurrentInstruction {};
