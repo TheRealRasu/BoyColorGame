@@ -13,6 +13,9 @@ public:
     Alu() = default;
     ~Alu() = default;
 
+    uint8_t memory() const;
+    void resetMemory();
+
     enum class AluOperationType : uint8_t
     {
         add = 0b000,
@@ -36,7 +39,10 @@ public:
 
     void rotateValue(uint8_t& registerValue, bool& flagValue, const bool rotateRight, const bool throughCarry) const;
 
-    uint8_t flipValue(uint8_t& value) const;
+    void flipValue(const uint8_t value);
 
-    uint8_t arithmeticOperation(const uint8_t firstValue, const uint8_t secondValue, const AluOperationType opType, bool additionalFlag = false) const;
+    void arithmeticOperation(const uint8_t firstValue, const uint8_t secondValue, const AluOperationType opType, bool additionalFlag = false);
+
+private:
+    uint8_t mMemory {};
 };

@@ -564,7 +564,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
                 {
                     uint8_t accumulator = mRegisters.accumulator();
                     mAlu.flipValue(accumulator);
-                    mRegisters.setAccumulator(accumulator);
+                    mRegisters.setAccumulator(mAlu.memory());
 
                     mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, true);
                     mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, true);
@@ -676,14 +676,14 @@ void CpuCore::handleOneZeroInstructionBlock() // DONE
         }
         else if (mCurrentInstruction.currentCycle == 1)
         {
-            const uint8_t result = mAlu.arithmeticOperation(accumulatorValue, mDataBus, operation);
+            mAlu.arithmeticOperation(accumulatorValue, mDataBus, operation);
             
             if (operation != Alu::AluOperationType::compare)
             {
-                mRegisters.setAccumulator(result);
+                mRegisters.setAccumulator(mAlu.memory());
             }
 
-            setFlagsAfterArithmeticOperation(operation, result);
+            setFlagsAfterArithmeticOperation(operation, mAlu.memory());
             return;
         }
     }
@@ -696,14 +696,14 @@ void CpuCore::handleOneZeroInstructionBlock() // DONE
         additionalFlag = mRegisters.flagValue(Registers::FlagsPosition::carry_flag);
     }
 
-    const uint8_t result = mAlu.arithmeticOperation(accumulatorValue, secondRegister, operation, additionalFlag);
+    mAlu.arithmeticOperation(accumulatorValue, secondRegister, operation, additionalFlag);
     
     if (operation != Alu::AluOperationType::compare)
     {
-        mRegisters.setAccumulator(result);
+        mRegisters.setAccumulator(mAlu.memory());
     }
 
-    setFlagsAfterArithmeticOperation(operation, result);
+    setFlagsAfterArithmeticOperation(operation, mAlu.memory());
     return;
 }
 
@@ -989,14 +989,14 @@ void CpuCore::handleOneOneInstructionBlock()
             {
                 const uint8_t accumulatorValue = mRegisters.accumulator();
                 const Alu::AluOperationType operation = static_cast<Alu::AluOperationType>(firstOperand);
-                const uint8_t result = mAlu.arithmeticOperation(accumulatorValue, mDataBus, operation);
+                mAlu.arithmeticOperation(accumulatorValue, mDataBus, operation);
                 
                 if (operation != Alu::AluOperationType::compare)
                 {
-                    mRegisters.setAccumulator(result);
+                    mRegisters.setAccumulator(mAlu.memory());
                 }
 
-                setFlagsAfterArithmeticOperation(operation, result);
+                setFlagsAfterArithmeticOperation(operation, mAlu.memory());
                 return;
             }
             break;

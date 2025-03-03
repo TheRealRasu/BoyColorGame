@@ -1,5 +1,15 @@
 #include "Alu.h"
 
+uint8_t Alu::memory() const
+{
+    return mMemory;
+}
+
+void Alu::resetMemory()
+{
+    mMemory = 0u;
+}
+
 template<typename T>
 void Alu::incrementRegister(T& givenRegister) const
 {
@@ -78,39 +88,37 @@ void Alu::rotateValue(uint8_t& registerValue, bool& flagValue, const bool rotate
     }
 }
 
-uint8_t Alu::flipValue(uint8_t& value) const
+void Alu::flipValue(const uint8_t value)
 {
-    return ~value;
+    mMemory = ~value;
 }
 
-uint8_t Alu::arithmeticOperation(const uint8_t firstValue, const uint8_t secondValue, const AluOperationType opType, bool additionalFlag) const
+void Alu::arithmeticOperation(const uint8_t firstValue, const uint8_t secondValue, const AluOperationType opType, bool additionalFlag)
 {
     switch (opType)
     {
         case AluOperationType::add:
         case AluOperationType::add_plus_carry:
         {
-            return firstValue + secondValue + !!additionalFlag;
+            mMemory = firstValue + secondValue + !!additionalFlag;
         }
         case AluOperationType::subtract:
         case AluOperationType::subtract_plus_carry:
         case AluOperationType::compare:
         {
-            return firstValue - secondValue - !!additionalFlag;
+            mMemory = firstValue - secondValue - !!additionalFlag;
         }
         case AluOperationType::logical_and:
         {
-            return firstValue & secondValue;
+            mMemory = firstValue & secondValue;
         }
         case AluOperationType::logical_xor:
         {
-            return firstValue ^ secondValue;
+            mMemory =  firstValue ^ secondValue;
         }
         case AluOperationType::logical_or:
         {
-            return firstValue | secondValue;
+            mMemory = firstValue | secondValue;
         }
     }
-
-    return 0u;
 }
