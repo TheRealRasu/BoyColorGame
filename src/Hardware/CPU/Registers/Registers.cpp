@@ -68,6 +68,10 @@ uint16_t Registers::bigRegisterValue(const BigRegisterIdentifier identifier) con
         {
             return (mAccumulator << 8) + mFlagsRegister;
         }
+        case BigRegisterIdentifier::register_sp:
+        {
+            return mStackPointer;
+        }
     }
 
     return 0u;
@@ -186,6 +190,11 @@ void Registers::setBigRegister(const BigRegisterIdentifier identifier, const uin
         {
             mAccumulator = value >> 8;
             mFlagsRegister = value & 0xFF;
+            break;
+        }
+        case BigRegisterIdentifier::register_sp:
+        {
+            mStackPointer = value;
             break;
         }
     }
