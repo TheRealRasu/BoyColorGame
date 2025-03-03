@@ -843,11 +843,39 @@ void CpuCore::handleOneOneInstructionBlock()
 
             break;
         }
-        case 0b010: // 0xC2 0xCA 0xD2 0xDA 'JP cc, nn' 0xE2 0xF2 'LDH n, n' 0xEA 0xFA 'LD n, nn' TODO
+        case 0b010: // 0xC2 0xCA 0xD2 0xDA 'JP cc, nn' 0xE2 0xF2 'LDH n, n' 0xEA 0xFA 'LD n, nn'
         {
             if ((firstOperand >> 2 & 0b1) == false) // 0xC2 0xD2 0xCA 0xDA 'JP cc, nn'
             {
-                // TODO
+                if (mCurrentInstruction.currentCycle == 0 || mCurrentInstruction.currentCycle == 1)
+                {
+                    mAddressBus = mRegisters.programCounter();
+                    mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+                    mCurrentInstruction.temporalData.push_back(mDataBus);
+
+                    increaseAndStoreProgramCounter();
+
+                    if (mCurrentInstruction.currentCycle == 1)
+                    {
+                        const bool conditionMet = mRegisters.checkFlagCondition(static_cast<Registers::FlagCondition>(firstOperand & 0b11));
+                        mCurrentInstruction.conditionMet = conditionMet;
+                        if (conditionMet)
+                        {
+                            mCurrentInstruction.instructionCycles = 4;
+                        }
+                    }
+                    if (mCurrentInstruction.currentCycle == 2)
+                    {
+                        if (mCurrentInstruction.conditionMet)
+                        {
+                            mAddressBus = 0x0000;
+
+                            const std::vector<uint8_t>& tempData = mCurrentInstruction.temporalData;
+                            const uint16_t newPc = tempData.at(0) + (tempData.at(1) << 8);
+                            mRegisters.setProgramCounter(newPc);
+                        }
+                    }
+                }
             }
             else if (firstOperand == 0b100) // 0xE2 'LDH (C), A'
             {
@@ -883,6 +911,7 @@ void CpuCore::handleOneOneInstructionBlock()
             {
                 if (mCurrentInstruction.currentCycle == 0 || mCurrentInstruction.currentCycle == 1)
                 {
+                    mAddressBus = mRegisters.programCounter();
                     mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
                     mCurrentInstruction.temporalData.push_back(mDataBus);
 
@@ -903,7 +932,25 @@ void CpuCore::handleOneOneInstructionBlock()
             }
             else if (firstOperand == 0b111) // 0xFA 'LD A, (nn)
             {
-                // TODO
+                if (mCurrentInstruction.currentCycle == 0 || mCurrentInstruction.currentCycle == 1)
+                {
+                    mAddressBus = mRegisters.programCounter();
+                    mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+                    mCurrentInstruction.temporalData.push_back(mDataBus);
+
+                    increaseAndStoreProgramCounter();
+                }
+                else if (mCurrentInstruction.currentCycle == 2)
+                {
+                    const std::vector<uint8_t>& tempData = mCurrentInstruction.temporalData;
+
+                    mAddressBus = tempData.at(0) + (tempData.at(1) << 8);
+                    mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+                }
+                else if (mCurrentInstruction.currentCycle == 3)
+                {
+                    mRegisters.setAccumulator(mDataBus);
+                }
             }
 
             return;
