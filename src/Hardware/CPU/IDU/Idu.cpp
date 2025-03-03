@@ -1,5 +1,9 @@
 #include "Idu.h"
 
+Idu::Idu(Registers registers)
+    : mRegisters(registers)
+{}
+
 uint16_t Idu::memory() const
 {
     return mMemory;
