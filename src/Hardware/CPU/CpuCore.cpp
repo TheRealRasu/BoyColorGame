@@ -843,8 +843,69 @@ void CpuCore::handleOneOneInstructionBlock()
 
             break;
         }
-        case 0b010: // 0xC2 0xCA 0xD2 0xDA 0xE2 0xEA 0xF2 0xFA TODO
+        case 0b010: // 0xC2 0xCA 0xD2 0xDA 'JP cc, nn' 0xE2 0xF2 'LDH n, n' 0xEA 0xFA 'LD n, nn' TODO
         {
+            if ((firstOperand >> 2 & 0b1) == false) // 0xC2 0xD2 0xCA 0xDA 'JP cc, nn'
+            {
+                // TODO
+            }
+            else if (firstOperand == 0b100) // 0xE2 'LDH (C), A'
+            {
+                if (mCurrentInstruction.currentCycle == 0)
+                {
+                    const uint8_t cRegister = mRegisters.smallRegisterValue(0b001);
+                    mAddressBus = 0xFF00 + cRegister;
+
+                    mDataBus = mRegisters.accumulator();
+
+                    mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
+                }
+                else if (mCurrentInstruction.currentCycle == 1)
+                {
+                    // nothing left to do
+                }
+            }
+            else if (firstOperand == 0b110) // 0xF2 'LDH A, (C)'
+            {
+                if (mCurrentInstruction.currentCycle == 0)
+                {
+                    const uint8_t cRegister = mRegisters.smallRegisterValue(0b001);
+                    mAddressBus = 0xFF00 + cRegister;
+
+                    mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+                }
+                else if (mCurrentInstruction.currentCycle == 1)
+                {
+                    mRegisters.setAccumulator(mDataBus);
+                }
+            }
+            else if (firstOperand == 0b101) // 0xEA 'LD (nn), A'
+            {
+                if (mCurrentInstruction.currentCycle == 0 || mCurrentInstruction.currentCycle == 1)
+                {
+                    mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+                    mCurrentInstruction.temporalData.push_back(mDataBus);
+
+                    increaseAndStoreProgramCounter();
+                }
+                else if (mCurrentInstruction.currentCycle == 2)
+                {
+                    const std::vector<uint8_t>& tempData = mCurrentInstruction.temporalData;
+                    mAddressBus = tempData.at(0) + (tempData.at(1) << 8);
+
+                    mDataBus = mRegisters.accumulator();
+                    mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
+                }
+                else if (mCurrentInstruction.currentCycle == 3)
+                {
+                    // nothing left to do
+                }
+            }
+            else if (firstOperand == 0b111) // 0xFA 'LD A, (nn)
+            {
+                // TODO
+            }
+
             return;
         }
         case 0b011: // 0xC3 0xCB 0xF3 0xFB TODO
@@ -894,7 +955,7 @@ void CpuCore::handleOneOneInstructionBlock()
             }
             return;
         }
-        case 0b100: // 0xC4 0xD4 0xCC 0xDC 'CALL CON, nn'
+        case 0b100: // 0xC4 0xD4 0xCC 0xDC 'CALL cc, nn'
         {
             if ((firstOperand >> 2) & 0b1) return; // 0xE4 0xEC 0xF4 0xFC undefined actions
 
