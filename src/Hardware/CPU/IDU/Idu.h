@@ -15,13 +15,11 @@ public:
     uint16_t memory() const;
     void resetMemory();
 
-    void increaseValue(uint16_t& givenValue) const;
+    void increaseValue(const uint16_t givenValue);
 
-    template<typename T>
-    void decreaseValue(T& givenValue) const;
+    void decreaseValue(const uint16_t givenValue);
 
-    template<typename T>
-    void assignValue(const T& valueSrc, T& valueDst) const;
+    void assignValue(const uint16_t value);
 
 private:
     uint16_t mMemory {};
