@@ -39,7 +39,7 @@ private:
     void handleOneOneInstructionBlock();
 
     // convenience methods
-    Registers::BigRegisterIdentifier operandToBigRegister(const uint8_t operand/*, const uint8_t instructionBlock, const bool includeSpAl*/) const;
+    Registers::BigRegisterIdentifier instructionToBigRegisterValue() const;
 
     void increaseAndStoreProgramCounter();
     void decreaseAndStoreProgramCounter();

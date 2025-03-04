@@ -214,14 +214,34 @@ void CpuCore::handleZeroZeroInstructionBlock()
                 default: break;
             }
         }
-        case 0b001: // 0x01, 0x09, 0x11, 0x19, 0x21, 0x29, 0x31, 0x39. TODO
+        case 0b001: // 0x01, 0x09, 0x11, 0x19, 0x21, 0x29, 0x31, 0x39
         {
-            // instructions: 0x09 0x19 0x29 0x39
-            if (registerId & 0b1) // TODO: ADD HL, XX
+            if (registerId & 0b1) // 0x09 0x19 0x29 0x39 ADD HL, rr
             {
-                
+                if (mCurrentInstruction.currentCycle == 0)
+                {
+                    mAddressBus = 0x0000;
+
+                    const uint8_t lRegister = static_cast<uint8_t>(mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl) & 0xFF);
+                    const uint8_t otherRegister = static_cast<uint8_t>(mRegisters.bigRegisterValue(instructionToBigRegisterValue()) & 0xFF);
+
+                    const uint8_t result = lRegister + otherRegister; // TODO move this to ALU
+                    setFlagsAfterArithmeticOperation(Alu::AluOperationType::add, result);
+
+                    mRegisters.setSmallRegister(0b101, result);
+                }
+                else if (mCurrentInstruction.currentCycle == 1)
+                {
+                    const uint8_t hRegister = static_cast<uint8_t>(mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl) >> 8);
+                    const uint8_t otherRegister = static_cast<uint8_t>(mRegisters.bigRegisterValue(instructionToBigRegisterValue()) >> 8);
+
+                    const uint8_t result = hRegister + otherRegister + !!mRegisters.flagValue(Registers::FlagsPosition::carry_flag); // TODO move this to ALU
+                    setFlagsAfterArithmeticOperation(Alu::AluOperationType::add, result);
+
+                    mRegisters.setSmallRegister(0b100, result);
+                }
             }
-            else
+            else // 0x01 0x11 0x21 0x31 LD rr, nn
             {
                 if (mCurrentInstruction.currentCycle == 0 || mCurrentInstruction.currentCycle == 1)
                 {
@@ -237,22 +257,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
                     const std::vector<uint8_t>& tempData = mCurrentInstruction.temporalData;
                     const uint16_t newValue = tempData.at(0) + (tempData.at(1) << 8);
 
-                    if (registerId == 0b000) // 0x01 LD BC, nn
-                    {
-                        mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_bc, newValue);
-                    }
-                    else if (registerId == 0b010) // 0x11 LD DE, nn
-                    {
-                        mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_de, newValue);
-                    }
-                    else if (registerId == 0b100) // 0x21 LD HL, nn
-                    {
-                        mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_hl, newValue);
-                    }
-                    else if (registerId == 0b110) // 0x31 LD SP, nn
-                    {
-                        mRegisters.setStackPointer(newValue);
-                    }
+                    mRegisters.setBigRegister(instructionToBigRegisterValue(), newValue);
                 }
             }
             break;
@@ -264,91 +269,83 @@ void CpuCore::handleZeroZeroInstructionBlock()
                 case 0b000: // 0x02 LD (BC), A
                 case 0b010: // 0x12 LD (DE), A
                 {
-                    mAddressBus = mMemoryManager.getMemoryAtAddress(mRegisters.bigRegisterValue(operandToBigRegister(registerId)));
-                    mDataBus = mRegisters.accumulator();
+                    if (mCurrentInstruction.currentCycle == 0)
+                    {
+                        mAddressBus = mMemoryManager.getMemoryAtAddress(mRegisters.bigRegisterValue(instructionToBigRegisterValue()));
+                        mDataBus = mRegisters.accumulator();
 
-                    mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
+                        mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
+                    }
+
                     return;
                 }
                 case 0b100: // 0x22 LD (HL+), A
-                {
-                    mAddressBus = mMemoryManager.getMemoryAtAddress(mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl));
-                    mDataBus = mRegisters.accumulator();
-
-                    mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
-
-                    uint16_t newRegisterValue = mAddressBus;
-                    mIdu.increaseValue(newRegisterValue);
-                    mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_hl, mIdu.memory());
-                    return;
-                }
                 case 0b110: // 0x32 LD (HL-), A
-                {
-                    mAddressBus = mMemoryManager.getMemoryAtAddress(mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl));
-                    mDataBus = mRegisters.accumulator();
-
-                    mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
-
-                    uint16_t newRegisterValue = mAddressBus;
-                    mAlu.decrementRegister(newRegisterValue);
-                    mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_hl, newRegisterValue);
-                    return;
-                }
-                case 0b001: // 0x0A LD A, (BC)
                 {
                     if (mCurrentInstruction.currentCycle == 0)
                     {
-                        mAddressBus = mMemoryManager.getMemoryAtAddress(mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_bc));
-                        mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+                        mAddressBus = mMemoryManager.getMemoryAtAddress(mRegisters.bigRegisterValue(instructionToBigRegisterValue()));
+                        mDataBus = mRegisters.accumulator();
+
+                        mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
+
+                        const uint16_t newRegisterValue = mAddressBus;
+
+                        if (registerId == 0b100)
+                        {
+                            mIdu.increaseValue(mAddressBus);
+                        }
+                        else if (registerId == 0b110)
+                        {
+                            mIdu.decreaseValue(mAddressBus);
+                        }
+
+                        mRegisters.setBigRegister(instructionToBigRegisterValue(), mIdu.memory());
                     }
-                    else
-                    {
-                        mRegisters.setAccumulator(mDataBus);
-                    }
+
+                    return;
                 }
+                case 0b001: // 0x0A LD A, (BC)
                 case 0b011: // 0x1A LD A, (DE)
                 {
                     if (mCurrentInstruction.currentCycle == 0)
                     {
-                        mAddressBus = mMemoryManager.getMemoryAtAddress(mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_de));
+                        mAddressBus = mMemoryManager.getMemoryAtAddress(mRegisters.bigRegisterValue(instructionToBigRegisterValue()));
                         mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
                     }
-                    else
+                    else if (mCurrentInstruction.currentCycle == 1)
                     {
                         mRegisters.setAccumulator(mDataBus);
                     }
+
+                    return;
                 }
                 case 0b101: // 0x2A LD A, (HL+)
-                {
-                    if (mCurrentInstruction.currentCycle == 0)
-                    {
-                        uint16_t hlValue = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl);
-                        mAddressBus = mMemoryManager.getMemoryAtAddress(hlValue);
-                        mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
-
-                        mIdu.increaseValue(hlValue);
-                        mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_hl, mIdu.memory());
-                    }
-                    else
-                    {
-                        mRegisters.setAccumulator(mDataBus);
-                    }
-                }
                 case 0b111: // 0x3A LD A, (HL-)
                 {
                     if (mCurrentInstruction.currentCycle == 0)
                     {
-                        uint16_t hlValue = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl);
+                        uint16_t hlValue = mRegisters.bigRegisterValue(instructionToBigRegisterValue());
                         mAddressBus = mMemoryManager.getMemoryAtAddress(hlValue);
                         mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
 
-                        mIdu.decreaseValue(hlValue);
-                        mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_hl, mIdu.memory());
+                        if (registerId == 0b101)
+                        {
+                            mIdu.increaseValue(hlValue);
+                        }
+                        else if (registerId == 0b111)
+                        {
+                            mIdu.decreaseValue(hlValue);
+                        }
+
+                        mRegisters.setBigRegister(instructionToBigRegisterValue(), mIdu.memory());
                     }
-                    else
+                    else if (mCurrentInstruction.currentCycle == 1)
                     {
                         mRegisters.setAccumulator(mDataBus);
                     }
+
+                    return;
                 }
             }
 
@@ -358,22 +355,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
         {
             if (mCurrentInstruction.currentCycle == 0)
             {
-                if (const uint8_t identifier = (registerId >> 1) & 0b11; identifier == 0b00)
-                {
-                    mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_bc);
-                }
-                else if (identifier == 0b01)
-                {
-                    mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_de);
-                }
-                else if (identifier == 0b01)
-                {
-                    mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl);
-                }
-                else if (identifier == 0b01)
-                {
-                    mAddressBus = mRegisters.stackPointer();
-                }
+                mAddressBus = mRegisters.bigRegisterValue(instructionToBigRegisterValue());
 
                 if (registerId & 0b1)
                 {
@@ -386,22 +368,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
 
                 const uint16_t addressBus = mIdu.memory();
 
-                if (const uint8_t identifier = (registerId >> 1) & 0b11; identifier == 0b00)
-                {
-                    mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_bc, addressBus);
-                }
-                else if (identifier == 0b01)
-                {
-                    mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_de, addressBus);
-                }
-                else if (identifier == 0b01)
-                {
-                    mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_hl, addressBus);
-                }
-                else if (identifier == 0b01)
-                {
-                    mRegisters.setStackPointer(addressBus);
-                }
+                mRegisters.setBigRegister(instructionToBigRegisterValue(), addressBus);
             }
 
             break;
@@ -428,15 +395,18 @@ void CpuCore::handleZeroZeroInstructionBlock()
 
                 return;
             }
-            
 
-            uint8_t newRegisterValue = mRegisters.smallRegisterValue(registerId);
-            mAlu.incrementRegister(newRegisterValue);
-            mRegisters.setSmallRegister(registerId, newRegisterValue);
+            if (mCurrentInstruction.currentCycle == 0)
+            {
+                uint8_t newRegisterValue = mRegisters.smallRegisterValue(registerId);
+                mAlu.incrementRegister(newRegisterValue);
+                mRegisters.setSmallRegister(registerId, newRegisterValue);
 
-            mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, newRegisterValue == 0);
-            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
-            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (newRegisterValue >> 3) & 0b1);
+                mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, newRegisterValue == 0);
+                mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+                mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (newRegisterValue >> 3) & 0b1);
+                return;
+            }
             break;
         }
         case 0b101: // 0x05, 0x0D, 0x15, 0x1D, 0x25, 0x2D, 0x35, 0x3D. decrement register
@@ -462,14 +432,17 @@ void CpuCore::handleZeroZeroInstructionBlock()
                 return;
             }
             
-            uint8_t newRegisterValue = mRegisters.smallRegisterValue(registerId);
-            mAlu.decrementRegister(newRegisterValue);
-            mRegisters.setSmallRegister(registerId, newRegisterValue);
+            if (mCurrentInstruction.currentCycle == 0)
+            {
+                uint8_t newRegisterValue = mRegisters.smallRegisterValue(registerId);
+                mAlu.decrementRegister(newRegisterValue);
+                mRegisters.setSmallRegister(registerId, newRegisterValue);
 
-            mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, newRegisterValue == 0);
-            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, true);
-            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (newRegisterValue >> 3) & 0b1);
-            break;
+                mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, newRegisterValue == 0);
+                mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, true);
+                mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (newRegisterValue >> 3) & 0b1);
+                break;
+            }
         }
         case 0b110: // 0x06, 0x0E, 0x16, 0x1E, 0x26, 0x2E, 0x36, 0x3E. load incoming data to register
         {
@@ -782,7 +755,7 @@ void CpuCore::handleOneOneInstructionBlock()
                     }
                 }
             }
-            else if (firstOperand == 0b111) // 0xF8 LD HL, SP+e
+            else if (firstOperand == 0b111) // 0xF8 LD HL, SP+e TODO
             {
                 // TODO LD HL, SP+e
             }
@@ -792,14 +765,45 @@ void CpuCore::handleOneOneInstructionBlock()
             }
             break;
         }
-        case 0b001: // 0xC1 0xD1 0xE1 0xF1 'POP rr' 0xC9 'RET' 0xD9 'RETI' 0xE9 'JP HL' 0xF9 'LD SP, HL', TODO
+        case 0b001: // 0xC1 0xD1 0xE1 0xF1 'POP rr' 0xC9 'RET' 0xD9 'RETI' 0xE9 'JP HL' 0xF9 'LD SP, HL'
         {
-            if (firstOperand == 0b001) // 0xC9 RET - TODO
+            if (firstOperand == 0b001 || firstOperand == 0b011) // 0xC9 RET and 0xD9 RETI
             {
-                return;
-            }
-            else if (firstOperand == 0b011) // 0xD9 RETI - TODO
-            {
+                switch (mCurrentInstruction.currentCycle)
+                {
+                    case 0:
+                    case 1:
+                    {
+                        mAddressBus = mRegisters.stackPointer();
+                        mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+
+                        mCurrentInstruction.temporalData.push_back(mDataBus);
+
+                        increaseAndStoreStackPointer();
+                        break;
+                    }
+                    case 2:
+                    {
+                        mAddressBus = 0x0000;
+                        const std::vector<uint8_t>& temporalData = mCurrentInstruction.temporalData;
+                        const uint16_t newValue = temporalData.at(0) + (temporalData.at(1) << 8);
+                        
+                        mRegisters.setProgramCounter(newValue);
+
+                        if (firstOperand == 0b011)
+                        {
+                            mRegisters.setInterruptEnable(1u);
+                        }
+
+                        break;
+                    }
+                    default:
+                    {
+                        // do nothing; we're done here
+                        break;
+                    }
+                }
+
                 return;
             }
             else if (firstOperand == 0b101) // 0xE9 JP HL
@@ -834,7 +838,7 @@ void CpuCore::handleOneOneInstructionBlock()
                     const std::vector<uint8_t>& temporalData = mCurrentInstruction.temporalData;
                     const uint16_t newValue = temporalData.at(0) + (temporalData.at(1) << 8);
                     
-                    mRegisters.setBigRegister(operandToBigRegister(firstOperand), newValue);
+                    mRegisters.setBigRegister(instructionToBigRegisterValue(), newValue);
                     break;
                 }
                 default:
@@ -1052,7 +1056,7 @@ void CpuCore::handleOneOneInstructionBlock()
                         case 1:
                         {
                             mAddressBus = mRegisters.stackPointer();
-                            mDataBus = mRegisters.bigRegisterValue(operandToBigRegister(firstOperand)) >> 8;
+                            mDataBus = mRegisters.bigRegisterValue(instructionToBigRegisterValue()) >> 8;
 
                             mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
                             decreaseAndStoreStackPointer();
@@ -1061,7 +1065,7 @@ void CpuCore::handleOneOneInstructionBlock()
                         case 2:
                         {
                             mAddressBus = mRegisters.stackPointer();
-                            mDataBus = static_cast<uint8_t>(mRegisters.bigRegisterValue(operandToBigRegister(firstOperand)) & 0xFF);
+                            mDataBus = static_cast<uint8_t>(mRegisters.bigRegisterValue(instructionToBigRegisterValue()) & 0xFF);
 
                             mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
                             return;
@@ -1107,14 +1111,29 @@ void CpuCore::handleOneOneInstructionBlock()
     }
 }
 
-Registers::BigRegisterIdentifier CpuCore::operandToBigRegister(const uint8_t operand/*, const uint8_t instructionBlock, const bool includeSpAl*/) const
+Registers::BigRegisterIdentifier CpuCore::instructionToBigRegisterValue() const
 {
-    switch (operand)
+    const uint8_t instructionCode = mRegisters.instructionRegister();
+
+    switch (instructionCode >> 4 & 0b11)
     {
-        case 0b000: return Registers::BigRegisterIdentifier::register_bc;
-        case 0b010: return Registers::BigRegisterIdentifier::register_de;
-        case 0b100: return Registers::BigRegisterIdentifier::register_hl;
-        case 0b110: return Registers::BigRegisterIdentifier::register_af;
+        case 0b00: return Registers::BigRegisterIdentifier::register_bc;
+        case 0b01: return Registers::BigRegisterIdentifier::register_de;
+        case 0b10: return Registers::BigRegisterIdentifier::register_hl;
+        case 0b11:
+        {
+            if (((instructionCode >> 6) & 0b11) == 0b11)
+            {
+                return Registers::BigRegisterIdentifier::register_af;
+            }
+
+            if ((instructionCode & 0b11) == 0b10)
+            {
+                return Registers::BigRegisterIdentifier::register_hl;
+            }           
+
+            return Registers::BigRegisterIdentifier::register_sp;
+        }
         default: break;
     }
 

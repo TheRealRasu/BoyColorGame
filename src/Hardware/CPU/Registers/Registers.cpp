@@ -26,7 +26,6 @@ uint8_t Registers::instructionRegister() const
     return mInstructionRegister;
 }
 
-
 bool Registers::flagValue(FlagsPosition pos) const
 {
     return (mFlagsRegister >> static_cast<uint8_t>(pos)) & 0b1;
