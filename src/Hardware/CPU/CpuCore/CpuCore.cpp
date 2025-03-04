@@ -1,6 +1,7 @@
 #include "CpuCore.h"
 
-#include "OpcodeCycleMap.h"
+#include "../OpcodeCycleMap.h"
+
 #include <cstdint>
 
 CpuCore::CpuCore()
