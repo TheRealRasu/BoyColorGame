@@ -37,6 +37,7 @@ public:
     uint16_t stackPointer() const;
     uint16_t programCounter() const;
     uint8_t accumulator() const;
+    uint8_t instructionRegister() const;
 
     bool flagValue(FlagsPosition pos) const;
 
