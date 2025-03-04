@@ -5,8 +5,7 @@
 
 CpuCore::CpuCore()
     : mIdu(mRegisters)
-{
-}
+{}
 
 void CpuCore::handleCurrentInstruction()
 {
@@ -90,6 +89,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
                         mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
 
                         mCurrentInstruction.temporalData.push_back(mDataBus);
+                        increaseAndStoreProgramCounter();
                     }
                     else if (mCurrentInstruction.currentCycle == 2)
                     {
@@ -358,7 +358,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
         {
             if (mCurrentInstruction.currentCycle == 0)
             {
-                if (uint8_t identifier = (registerId >> 1) & 0b11; identifier == 0b00)
+                if (const uint8_t identifier = (registerId >> 1) & 0b11; identifier == 0b00)
                 {
                     mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_bc);
                 }
@@ -386,7 +386,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
 
                 const uint16_t addressBus = mIdu.memory();
 
-                if (uint8_t identifier = (registerId >> 1) & 0b11; identifier == 0b00)
+                if (const uint8_t identifier = (registerId >> 1) & 0b11; identifier == 0b00)
                 {
                     mRegisters.setBigRegister(Registers::BigRegisterIdentifier::register_bc, addressBus);
                 }

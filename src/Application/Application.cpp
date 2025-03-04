@@ -1,6 +1,6 @@
 #include "Application.h"
 
-#include "../Hardware/CPU/CpuCore.h"
+#include "../Hardware/CPU/CpuCore/CpuCore.h"
 
 Application::Application()
 {

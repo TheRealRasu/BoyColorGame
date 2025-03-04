@@ -18,7 +18,7 @@ add_library(ControlUnit src/Hardware/CPU/ControlUnit/ControlUnit.cpp src/Hardwar
 add_library(Idu src/Hardware/CPU/IDU/Idu.cpp src/Hardware/CPU/IDU/Idu.h)
 add_library(Alu src/Hardware/CPU/ALU/Alu.cpp src/Hardware/CPU/ALU/Alu.h)
 #target_link_libraries(Idu Registers)
-add_library(CpuCore src/Hardware/CPU/CpuCore.cpp src/Hardware/CPU/CpuCore.h)
+add_library(CpuCore src/Hardware/CPU/CpuCore/CpuCore.cpp src/Hardware/CPU/CpuCore/CpuCore.h)
 target_link_libraries(CpuCore Registers Idu Alu ControlUnit MemoryManager)
 target_link_libraries(Application SDL2::SDL2)
 #target_link_libraries(DisplayHandler SDL2::SDL2)
