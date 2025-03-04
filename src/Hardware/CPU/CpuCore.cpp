@@ -25,8 +25,8 @@ void CpuCore::loadNewInstruction()
     mAddressBus = mRegisters.programCounter();
     const uint8_t instructionCode = mMemoryManager.getMemoryAtAddress(mAddressBus);
     mDataBus = instructionCode;
+    mRegisters.setInstructionRegister(instructionCode);
     
-    mCurrentInstruction.instructionCode = instructionCode;
     mCurrentInstruction.currentCycle = 0;
     mCurrentInstruction.instructionCycles = cyclesPerOpcode.at(instructionCode);
     mCurrentInstruction.conditionMet = false;
@@ -37,7 +37,7 @@ void CpuCore::loadNewInstruction()
 
 void CpuCore::executeInstruction()
 {
-    const uint8_t operationType = mCurrentInstruction.instructionCode >> 6;
+    const uint8_t operationType = mRegisters.instructionRegister() >> 6;
     
     if (operationType == 0b00)
     {
@@ -66,7 +66,7 @@ void CpuCore::executeInstruction()
 
 void CpuCore::handleZeroZeroInstructionBlock()
 {
-    const uint8_t instructionCode = mCurrentInstruction.instructionCode;
+    const uint8_t instructionCode = mRegisters.instructionRegister();
 
     const uint8_t registerId = (instructionCode >> 3) & 0b111;
     const uint8_t mainOperand = instructionCode & 0b111;
@@ -573,7 +573,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
 
 void CpuCore::handleZeroOneInstructionBlock() // DONE
 {
-    const uint8_t instructionCode = mCurrentInstruction.instructionCode;
+    const uint8_t instructionCode = mRegisters.instructionRegister();
 
     const uint8_t firstOperand = (instructionCode >> 3) & 0b111;
     const uint8_t secondOperand = instructionCode & 0b111;
@@ -636,7 +636,7 @@ void CpuCore::handleZeroOneInstructionBlock() // DONE
 
 void CpuCore::handleOneZeroInstructionBlock() // DONE
 {
-    const uint8_t instructionCode = mCurrentInstruction.instructionCode;
+    const uint8_t instructionCode = mRegisters.instructionRegister();
 
     // Arithmetic operations with the accumulator register
     const uint8_t accumulatorValue = mRegisters.accumulator();
@@ -692,7 +692,7 @@ void CpuCore::handleOneZeroInstructionBlock() // DONE
 
 void CpuCore::handleOneOneInstructionBlock()
 {
-    const uint8_t instructionCode = mCurrentInstruction.instructionCode;
+    const uint8_t instructionCode = mRegisters.instructionRegister();
 
     const uint8_t firstOperand = (instructionCode >> 3) & 0b111;
     const uint8_t mainOperand = instructionCode & 0b111;
@@ -1202,7 +1202,7 @@ void CpuCore::unconditionalFunctionCall()
         mDataBus = (mRegisters.programCounter() & 0xFF); // least significant byte
         mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
 
-        const uint16_t newAddress = mCurrentInstruction.instructionCode & 0x38;
+        const uint16_t newAddress = mRegisters.instructionRegister() & 0x38;
         mRegisters.setProgramCounter(newAddress);
     }
     else if (mCurrentInstruction.currentCycle == 3)
@@ -1231,7 +1231,7 @@ void CpuCore::conditionalFunctionCall()
             mCurrentInstruction.temporalData.push_back(mDataBus); // high byte
             increaseAndStoreProgramCounter();
 
-            const uint8_t operandCode = (mCurrentInstruction.instructionCode >> 3) & 0b111;
+            const uint8_t operandCode = (mRegisters.instructionRegister() >> 3) & 0b111;
             mCurrentInstruction.conditionMet = mRegisters.checkFlagCondition(static_cast<Registers::FlagCondition>(operandCode));
 
             if (mCurrentInstruction.conditionMet)
@@ -1339,7 +1339,7 @@ void CpuCore::conditionalReturnFromFunction()
             mAddressBus = 0x0000;
 
             // check condition
-            const uint8_t operandCode = (mCurrentInstruction.instructionCode >> 3) & 0b111;
+            const uint8_t operandCode = (mRegisters.instructionRegister() >> 3) & 0b111;
             mCurrentInstruction.conditionMet = mRegisters.checkFlagCondition(static_cast<Registers::FlagCondition>(operandCode));
 
             if (mCurrentInstruction.conditionMet)

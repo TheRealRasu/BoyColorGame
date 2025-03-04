@@ -19,7 +19,6 @@ public:
 
     struct Instruction
     {
-        uint8_t instructionCode {};
         uint8_t instructionCycles {};
         uint8_t currentCycle {};
 
