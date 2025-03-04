@@ -53,6 +53,7 @@ private:
     void conditionalFunctionCall();
     void callAddress();
     void conditionalReturnFromFunction();
+    void handleCbInstruction();
 
     Alu mAlu;
     ControlUnit mControlUnit;

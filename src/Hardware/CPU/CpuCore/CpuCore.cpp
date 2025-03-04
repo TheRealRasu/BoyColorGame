@@ -993,7 +993,14 @@ void CpuCore::handleOneOneInstructionBlock()
             }
             else if (firstOperand == 0b001) // 0xCB CB op TODO
             {
-                
+                if (mCurrentInstruction.currentCycle == 0)
+                {
+                    increaseAndStoreProgramCounter();
+                }
+                else if (mCurrentInstruction.currentCycle == 1)
+                {
+                    handleCbInstruction();
+                }
             }
             else if (firstOperand == 0b110) // 0xF3 DI
             {
@@ -1389,4 +1396,9 @@ void CpuCore::conditionalReturnFromFunction()
             break; 
         }
     }
+}
+
+void CpuCore::handleCbInstruction()
+{
+    // TODO
 }
