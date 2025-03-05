@@ -5,14 +5,14 @@
 
 class MemoryManager
 {
-    public:
-        MemoryManager();
-        ~MemoryManager();
+public:
+    MemoryManager();
+    ~MemoryManager();
 
     uint8_t getMemoryAtAddress(const uint16_t address) const;
     void writeToMemoryAddress(const uint16_t address, const uint8_t value);
 
-    protected:
-        std::vector<uint8_t> mWorkRam;
-        std::vector<uint8_t> mVideoRam;
+protected:
+    std::vector<uint8_t> mWorkRam;
+    std::vector<uint8_t> mVideoRam;
 };
