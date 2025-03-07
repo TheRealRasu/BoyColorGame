@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../Registers/Registers.h"
+
 #include <cstdint>
 
 /*  @ingroup CPU
@@ -10,7 +12,7 @@
 class Alu
 {
 public:
-    Alu() = default;
+    Alu(Registers& registers);
     ~Alu() = default;
 
     uint8_t memory() const;
@@ -28,6 +30,14 @@ public:
         compare = 0b111
     };
 
+    enum class BitOperationType : uint8_t
+    {
+        swap_nibbles = 0b00,
+        test_bit = 0b01,
+        reset_bit = 0b10,
+        set_bit = 0b11
+    };
+
     template<typename T>
     void incrementRegister(T& givenRegister) const;
 
@@ -42,7 +52,10 @@ public:
     void flipValue(const uint8_t value);
 
     void arithmeticOperation(const uint8_t firstValue, const uint8_t secondValue, const AluOperationType opType, bool additionalFlag = false);
+    void bitOperation(const uint8_t value, uint8_t bitIndex, BitOperationType bitType);
 
 private:
+    Registers& mRegisters;
+
     uint8_t mMemory {};
 };

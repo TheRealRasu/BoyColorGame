@@ -12,7 +12,7 @@
 class Idu
 {
 public:
-    Idu(Registers registers);
+    Idu(Registers& registers);
     ~Idu() = default;
 
     uint16_t memory() const;

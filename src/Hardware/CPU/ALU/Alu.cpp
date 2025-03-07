@@ -1,5 +1,11 @@
 #include "Alu.h"
 
+#include <bitset>
+
+Alu::Alu(Registers& registers)
+    : mRegisters(registers)
+{}
+
 uint8_t Alu::memory() const
 {
     return mMemory;
@@ -119,6 +125,39 @@ void Alu::arithmeticOperation(const uint8_t firstValue, const uint8_t secondValu
         case AluOperationType::logical_or:
         {
             mMemory = firstValue | secondValue;
+        }
+    }
+}
+
+void Alu::bitOperation(const uint8_t value, uint8_t bitIndex, BitOperationType bitType)
+{
+    std::bitset<8> bits = std::bitset<8>(value);
+    switch (bitType)
+    {
+        case BitOperationType::swap_nibbles:
+        {
+            // TODO
+            break;
+        }
+        case BitOperationType::test_bit:
+        {
+            const bool bitTest = bits.test(bitIndex);
+
+            mMemory = !!bitTest;
+            break;
+        }
+        case BitOperationType::reset_bit:
+        {
+            bits.reset(bitIndex);
+            mMemory = static_cast<uint8_t>(bits.to_ulong());
+            break;
+        }
+        case BitOperationType::set_bit:
+        {
+            bits.set(bitIndex);
+            mMemory = static_cast<uint8_t>(bits.to_ulong());
+
+            break;
         }
     }
 }

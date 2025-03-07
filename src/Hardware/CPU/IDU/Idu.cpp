@@ -1,6 +1,6 @@
 #include "Idu.h"
 
-Idu::Idu(Registers registers)
+Idu::Idu(Registers& registers)
     : mRegisters(registers)
 {}
 
