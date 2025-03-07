@@ -1427,33 +1427,28 @@ void CpuCore::handleCbInstruction()
     const uint8_t registerId = currentInstruction & 0b111;
     const uint8_t bitId = (currentInstruction >> 3) & 0b111;
 
-    if (instructionBlock == 0b00)
+    if (registerId == 0b110) // HL operations
     {
 
     }
-    else if (instructionBlock == 0b01)
+    else if (instructionBlock == 0b00)
     {
-        
+        // TODO various instructions 
     }
-    else if (instructionBlock == 0b10)
+    else // neither HL nor 0b00
     {
-        
-    }
-    else if (instructionBlock == 0b11) // set bit
-    {
-        if (registerId != 0b110)
+        if (mCurrentInstruction.currentCycle == 1)
         {
-            if (mCurrentInstruction.currentCycle == 1)
+            const uint8_t registerValue = mRegisters.smallRegisterValue(registerId);
+            mAlu.bitOperation(registerValue, bitId, static_cast<Alu::BitOperationType>(instructionBlock));
+            mRegisters.setSmallRegister(registerId, mAlu.memory());
+
+            if (instructionBlock == 0b01) // test bit
             {
-                uint8_t registerValue = mRegisters.smallRegisterValue(registerId);
-                mAlu.bitOperation(registerValue, bitId, Alu::BitOperationType::set_bit);
-                mRegisters.setSmallRegister(registerId, mAlu.memory());
+                mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, true);
+                mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, (mAlu.memory() == 0));
+                mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
             }
         }
-        else
-        {
-            // TODO set bit of value found at HL address 
-        }
     }
-    // TODO
 }
