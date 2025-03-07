@@ -4,7 +4,8 @@
 #include <cstdint>
 
 CpuCore::CpuCore()
-    : mIdu(mRegisters)
+    : mAlu(mRegisters),
+      mIdu(mRegisters)
 {}
 
 void CpuCore::handleCurrentInstruction()
@@ -1419,5 +1420,40 @@ void CpuCore::conditionalReturnFromFunction()
 
 void CpuCore::handleCbInstruction()
 {
+    const uint8_t currentInstruction = mRegisters.instructionRegister();
+
+    const uint8_t instructionBlock = (currentInstruction >> 6) & 0b11;
+
+    const uint8_t registerId = currentInstruction & 0b111;
+    const uint8_t bitId = (currentInstruction >> 3) & 0b111;
+
+    if (instructionBlock == 0b00)
+    {
+
+    }
+    else if (instructionBlock == 0b01)
+    {
+        
+    }
+    else if (instructionBlock == 0b10)
+    {
+        
+    }
+    else if (instructionBlock == 0b11) // set bit
+    {
+        if (registerId != 0b110)
+        {
+            if (mCurrentInstruction.currentCycle == 1)
+            {
+                uint8_t registerValue = mRegisters.smallRegisterValue(registerId);
+                mAlu.bitOperation(registerValue, bitId, Alu::BitOperationType::set_bit);
+                mRegisters.setSmallRegister(registerId, mAlu.memory());
+            }
+        }
+        else
+        {
+            // TODO set bit of value found at HL address 
+        }
+    }
     // TODO
 }

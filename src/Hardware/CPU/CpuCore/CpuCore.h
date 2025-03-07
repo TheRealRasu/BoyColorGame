@@ -55,9 +55,9 @@ private:
     void conditionalReturnFromFunction();
     void handleCbInstruction();
 
-    Alu mAlu;
     ControlUnit mControlUnit;
     Registers mRegisters;
+    Alu mAlu;
     Idu mIdu;
     MemoryManager mMemoryManager;
 
