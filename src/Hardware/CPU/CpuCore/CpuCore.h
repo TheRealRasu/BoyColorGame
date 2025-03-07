@@ -4,12 +4,12 @@
 #include <memory>
 #include <vector>
 
-#include "../Memory/MemoryManager.h"
+#include "../../Memory/MemoryManager.h"
 
-#include "ALU/Alu.h"
-#include "ControlUnit/ControlUnit.h"
-#include "IDU/Idu.h"
-#include "Registers/Registers.h"
+#include "../ALU/Alu.h"
+#include "../ControlUnit/ControlUnit.h"
+#include "../IDU/Idu.h"
+#include "../Registers/Registers.h"
 
 class CpuCore
 {
