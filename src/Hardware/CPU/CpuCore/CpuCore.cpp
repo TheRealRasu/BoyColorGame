@@ -1000,14 +1000,7 @@ void CpuCore::handleOneOneInstructionBlock()
             }
             else if (firstOperand == 0b001) // 0xCB CB op TODO
             {
-                if (mCurrentInstruction.currentCycle == 0)
-                {
-                    mIdu.incrementProgramCounter();
-                }
-                else if (mCurrentInstruction.currentCycle == 1)
-                {
-                    handleCbInstruction();
-                }
+                handleCbInstruction();
             }
             else if (firstOperand == 0b110) // 0xF3 DI
             {
@@ -1397,16 +1390,50 @@ void CpuCore::conditionalReturnFromFunction()
 
 void CpuCore::handleCbInstruction()
 {
+    if (mCurrentInstruction.currentCycle == 0)
+    {
+        mIdu.incrementProgramCounter();
+        return;
+    }
+
     const uint8_t currentInstruction = mRegisters.instructionRegister();
 
     const uint8_t instructionBlock = (currentInstruction >> 6) & 0b11;
-
     const uint8_t registerId = currentInstruction & 0b111;
     const uint8_t bitId = (currentInstruction >> 3) & 0b111;
 
     if (registerId == 0b110) // HL operations
     {
+        if (instructionBlock == 0b00)
+        {
+            // TODO various HL instructions
+        }
+        else
+        {
+            if (mCurrentInstruction.currentCycle == 1)
+            {
+                // (HL) bit test needs three cycles, bit set and bit reset instructions need 4
+                mCurrentInstruction.instructionCycles = (instructionBlock == 0b01) ? 3 : 4;
 
+                mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl);
+                mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
+            }
+            else if (mCurrentInstruction.currentCycle == 2)
+            {
+                mAlu.bitOperation(mDataBus, bitId, static_cast<Alu::BitOperationType>(instructionBlock));
+
+                if (instructionBlock == 0b01) // Test (HL) bit
+                {
+                    mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, true);
+                    mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, (mAlu.memory() == 0));
+                    mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+                }
+                else
+                {
+                    mMemoryManager.writeToMemoryAddress(mAddressBus, mAlu.memory());
+                }
+            }
+        }
     }
     else if (instructionBlock == 0b00)
     {
@@ -1420,7 +1447,7 @@ void CpuCore::handleCbInstruction()
             mAlu.bitOperation(registerValue, bitId, static_cast<Alu::BitOperationType>(instructionBlock));
             mRegisters.setSmallRegister(registerId, mAlu.memory());
 
-            if (instructionBlock == 0b01) // test bit
+            if (instructionBlock == 0b01) // test bit instructions set flags, the others do not
             {
                 mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, true);
                 mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, (mAlu.memory() == 0));
