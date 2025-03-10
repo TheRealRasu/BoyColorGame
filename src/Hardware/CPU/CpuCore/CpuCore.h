@@ -41,12 +41,6 @@ private:
     // convenience methods
     Registers::BigRegisterIdentifier instructionToBigRegisterValue() const;
 
-    void increaseAndStoreProgramCounter();
-    void decreaseAndStoreProgramCounter();
-
-    void increaseAndStoreStackPointer();
-    void decreaseAndStoreStackPointer();
-
     // methods for instructions
     void setFlagsAfterArithmeticOperation(Alu::AluOperationType operation, uint8_t result);
     void unconditionalFunctionCall();

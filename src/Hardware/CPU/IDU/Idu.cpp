@@ -28,3 +28,37 @@ void Idu::assignValue(const uint16_t value)
 {
     mMemory = value;
 }
+
+void Idu::increaseRegister(Registers::BigRegisterIdentifier bigRegister, const uint16_t value)
+{
+    mRegisters.setBigRegister(bigRegister, value + 1);
+}
+
+void Idu::decreaseRegister(Registers::BigRegisterIdentifier bigRegister, const uint16_t value)
+{
+    mRegisters.setBigRegister(bigRegister, value - 1);
+}
+
+void Idu::incrementProgramCounter()
+{
+    const uint16_t programCounter = mRegisters.programCounter();
+    mRegisters.setProgramCounter(programCounter + 1);
+}
+
+void Idu::decrementProgramCounter()
+{
+    const uint16_t programCounter = mRegisters.programCounter();
+    mRegisters.setProgramCounter(programCounter - 1);
+}
+
+void Idu::incrementStackPointer()
+{
+    const uint16_t stackPointer = mRegisters.stackPointer();
+    mRegisters.setStackPointer(stackPointer + 1);
+}
+
+void Idu::decrementStackPointer()
+{
+    const uint16_t stackPointer = mRegisters.stackPointer();
+    mRegisters.setStackPointer(stackPointer - 1);
+}

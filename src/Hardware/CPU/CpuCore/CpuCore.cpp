@@ -24,16 +24,18 @@ void CpuCore::handleCurrentInstruction()
 void CpuCore::loadNewInstruction()
 {
     mAddressBus = mRegisters.programCounter();
-    const uint8_t instructionCode = mMemoryManager.getMemoryAtAddress(mAddressBus);
-    mDataBus = instructionCode;
-    mRegisters.setInstructionRegister(instructionCode);
+    mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
     
+    mRegisters.setInstructionRegister(mDataBus);
+    
+    // reset Instruction struct
     mCurrentInstruction.currentCycle = 0;
-    mCurrentInstruction.instructionCycles = cyclesPerOpcode.at(instructionCode);
+    mCurrentInstruction.instructionCycles = cyclesPerOpcode.at(mDataBus);
     mCurrentInstruction.conditionMet = false;
     mCurrentInstruction.temporalData.clear();
 
-    increaseAndStoreProgramCounter();
+    // first cycle is always executed during this method
+    mIdu.incrementProgramCounter();
 }
 
 void CpuCore::executeInstruction()
@@ -91,7 +93,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
                         mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
 
                         mCurrentInstruction.temporalData.push_back(mDataBus);
-                        increaseAndStoreProgramCounter();
+                        mIdu.incrementProgramCounter();
                     }
                     else if (mCurrentInstruction.currentCycle == 2)
                     {
@@ -125,7 +127,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
                         mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
                         mCurrentInstruction.temporalData.push_back(mDataBus);
 
-                        increaseAndStoreProgramCounter();
+                        mIdu.incrementProgramCounter();
                     }
                     else if (mCurrentInstruction.currentCycle == 1)
                     {
@@ -179,7 +181,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
                             mCurrentInstruction.instructionCycles = 3;
                         }
 
-                        increaseAndStoreProgramCounter();
+                        mIdu.incrementProgramCounter();
                     }
                     else if (mCurrentInstruction.currentCycle == 1)
                     {
@@ -251,7 +253,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
                     mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
 
                     mCurrentInstruction.temporalData.push_back(mDataBus);
-                    increaseAndStoreProgramCounter();
+                    mIdu.incrementProgramCounter();
                     break;
                 }
                 else if (mCurrentInstruction.currentCycle == 2)
@@ -453,7 +455,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
                 if (mCurrentInstruction.currentCycle == 0)
                 {
                     mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
-                    increaseAndStoreProgramCounter();
+                    mIdu.incrementProgramCounter();
                 }
                 else if (mCurrentInstruction.currentCycle == 1)
                 {
@@ -467,7 +469,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
             if (mCurrentInstruction.currentCycle == 0)
             {
                 mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
-                increaseAndStoreProgramCounter();
+                mIdu.incrementProgramCounter();
             }
             else if (mCurrentInstruction.currentCycle == 1)
             {
@@ -685,7 +687,7 @@ void CpuCore::handleOneOneInstructionBlock()
                         const uint8_t lowByte = mMemoryManager.getMemoryAtAddress(mAddressBus);
                         mCurrentInstruction.temporalData.push_back(lowByte);
 
-                        increaseAndStoreProgramCounter();
+                        mIdu.incrementProgramCounter();
                         break;
                     }
                     case 1:
@@ -707,7 +709,7 @@ void CpuCore::handleOneOneInstructionBlock()
                 if (const uint8_t curr = mCurrentInstruction.currentCycle; curr == 0)
                 {
                     mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
-                    increaseAndStoreProgramCounter();
+                    mIdu.incrementProgramCounter();
                 }
                 else if (curr == 1)
                 {
@@ -735,8 +737,7 @@ void CpuCore::handleOneOneInstructionBlock()
                     case 0:
                     {
                         mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
-
-                        increaseAndStoreProgramCounter();
+                        mIdu.incrementProgramCounter();
                         break;
                     }
                     case 1:
@@ -781,7 +782,7 @@ void CpuCore::handleOneOneInstructionBlock()
 
                         mCurrentInstruction.temporalData.push_back(mDataBus);
 
-                        increaseAndStoreStackPointer();
+                        mIdu.incrementStackPointer();
                         break;
                     }
                     case 2:
@@ -832,7 +833,7 @@ void CpuCore::handleOneOneInstructionBlock()
 
                     mCurrentInstruction.temporalData.push_back(mDataBus);
 
-                    increaseAndStoreStackPointer();
+                    mIdu.incrementStackPointer();
                     break;
                 }
                 case 2:
@@ -862,7 +863,7 @@ void CpuCore::handleOneOneInstructionBlock()
                     mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
                     mCurrentInstruction.temporalData.push_back(mDataBus);
 
-                    increaseAndStoreProgramCounter();
+                    mIdu.incrementProgramCounter();
 
                     if (mCurrentInstruction.currentCycle == 1)
                     {
@@ -924,7 +925,7 @@ void CpuCore::handleOneOneInstructionBlock()
                     mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
                     mCurrentInstruction.temporalData.push_back(mDataBus);
 
-                    increaseAndStoreProgramCounter();
+                    mIdu.incrementProgramCounter();
                 }
                 else if (mCurrentInstruction.currentCycle == 2)
                 {
@@ -947,7 +948,7 @@ void CpuCore::handleOneOneInstructionBlock()
                     mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
                     mCurrentInstruction.temporalData.push_back(mDataBus);
 
-                    increaseAndStoreProgramCounter();
+                    mIdu.incrementProgramCounter();
                 }
                 else if (mCurrentInstruction.currentCycle == 2)
                 {
@@ -978,7 +979,7 @@ void CpuCore::handleOneOneInstructionBlock()
 
                         mCurrentInstruction.temporalData.push_back(mDataBus);
 
-                        increaseAndStoreProgramCounter();
+                        mIdu.incrementProgramCounter();
                         break;
                     }
                     case 2:
@@ -1001,7 +1002,7 @@ void CpuCore::handleOneOneInstructionBlock()
             {
                 if (mCurrentInstruction.currentCycle == 0)
                 {
-                    increaseAndStoreProgramCounter();
+                    mIdu.incrementProgramCounter();
                 }
                 else if (mCurrentInstruction.currentCycle == 1)
                 {
@@ -1052,7 +1053,7 @@ void CpuCore::handleOneOneInstructionBlock()
                         case 0:
                         {
                             mAddressBus = mRegisters.stackPointer();
-                            decreaseAndStoreStackPointer();
+                            mIdu.decrementStackPointer();
                             return;
                         }
                         case 1:
@@ -1061,7 +1062,7 @@ void CpuCore::handleOneOneInstructionBlock()
                             mDataBus = mRegisters.bigRegisterValue(instructionToBigRegisterValue()) >> 8;
 
                             mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
-                            decreaseAndStoreStackPointer();
+                            mIdu.decrementStackPointer();
                             return;
                         }
                         case 2:
@@ -1087,7 +1088,7 @@ void CpuCore::handleOneOneInstructionBlock()
             if (mCurrentInstruction.currentCycle == 0)
             {
                 mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
-                increaseAndStoreProgramCounter();
+                mIdu.incrementProgramCounter();
             }
             else if (mCurrentInstruction.currentCycle == 1)
             {
@@ -1142,30 +1143,6 @@ Registers::BigRegisterIdentifier CpuCore::instructionToBigRegisterValue() const
     return Registers::BigRegisterIdentifier::register_bc;
 }
 
-void CpuCore::increaseAndStoreProgramCounter()
-{
-    mIdu.increaseValue(mAddressBus);
-    mRegisters.setProgramCounter(mIdu.memory());
-}
-
-void CpuCore::decreaseAndStoreProgramCounter()
-{
-    mIdu.decreaseValue(mAddressBus);
-    mRegisters.setProgramCounter(mIdu.memory());
-}
-
-void CpuCore::increaseAndStoreStackPointer()
-{
-    mIdu.increaseValue(mAddressBus);
-    mRegisters.setStackPointer(mIdu.memory());
-}
-
-void CpuCore::decreaseAndStoreStackPointer()
-{
-    mIdu.decreaseValue(mAddressBus);
-    mRegisters.setStackPointer(mIdu.memory());
-}
-
 void CpuCore::setFlagsAfterArithmeticOperation(Alu::AluOperationType operation, uint8_t result)
 {
     switch (operation)
@@ -1212,7 +1189,7 @@ void CpuCore::unconditionalFunctionCall()
     if (mCurrentInstruction.currentCycle == 0)
     {
         mAddressBus = mRegisters.stackPointer();
-        decreaseAndStoreStackPointer();
+        mIdu.decrementStackPointer();
     }
     else if (mCurrentInstruction.currentCycle == 1)
     {
@@ -1221,7 +1198,7 @@ void CpuCore::unconditionalFunctionCall()
         mDataBus = (mRegisters.programCounter() >> 8); // most significant byte
         mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
 
-        decreaseAndStoreStackPointer();
+        mIdu.decrementStackPointer();
     }
     else if (mCurrentInstruction.currentCycle == 2)
     {
@@ -1247,7 +1224,7 @@ void CpuCore::conditionalFunctionCall()
         {
             mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
             mCurrentInstruction.temporalData.push_back(mDataBus); // low byte
-            increaseAndStoreProgramCounter();
+            mIdu.incrementProgramCounter();
 
             break;
         }
@@ -1257,7 +1234,7 @@ void CpuCore::conditionalFunctionCall()
             mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
 
             mCurrentInstruction.temporalData.push_back(mDataBus); // high byte
-            increaseAndStoreProgramCounter();
+            mIdu.incrementProgramCounter();
 
             const uint8_t operandCode = (mRegisters.instructionRegister() >> 3) & 0b111;
             mCurrentInstruction.conditionMet = mRegisters.checkFlagCondition(static_cast<Registers::FlagCondition>(operandCode));
@@ -1274,7 +1251,7 @@ void CpuCore::conditionalFunctionCall()
             if (mCurrentInstruction.conditionMet == false) break; // nothing left to do
 
             mAddressBus = mRegisters.stackPointer();
-            decreaseAndStoreStackPointer();
+            mIdu.decrementStackPointer();
 
             break;
         }
@@ -1284,8 +1261,7 @@ void CpuCore::conditionalFunctionCall()
             mDataBus = mRegisters.programCounter() >> 8; // most significant PC byte
 
             mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
-
-            decreaseAndStoreStackPointer();
+            mIdu.decrementStackPointer();
 
             break;
         }
@@ -1319,13 +1295,13 @@ void CpuCore::callAddress()
         {
             mDataBus = mMemoryManager.getMemoryAtAddress(mAddressBus);
             mCurrentInstruction.temporalData.push_back(mDataBus);
-            increaseAndStoreProgramCounter();
+            mIdu.incrementProgramCounter();
             break;
         }
         case 2:
         {
             mAddressBus = mRegisters.stackPointer();
-            decreaseAndStoreStackPointer();
+            mIdu.decrementStackPointer();
             break;
         }
         case 3:
@@ -1335,7 +1311,7 @@ void CpuCore::callAddress()
 
             mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
 
-            decreaseAndStoreStackPointer();
+            mIdu.decrementStackPointer();
             break;
         }
         case 4:
@@ -1389,7 +1365,7 @@ void CpuCore::conditionalReturnFromFunction()
             const uint8_t lowByte = mMemoryManager.getMemoryAtAddress(mAddressBus);
             mCurrentInstruction.temporalData.push_back(lowByte);
 
-            increaseAndStoreStackPointer();
+            mIdu.incrementStackPointer();
             break;
         }
         case 2:
@@ -1398,7 +1374,7 @@ void CpuCore::conditionalReturnFromFunction()
             const uint8_t highByte = mMemoryManager.getMemoryAtAddress(mAddressBus);
             mCurrentInstruction.temporalData.push_back(highByte);
 
-            increaseAndStoreStackPointer();
+            mIdu.incrementStackPointer();
             break;
         }
         case 3:
