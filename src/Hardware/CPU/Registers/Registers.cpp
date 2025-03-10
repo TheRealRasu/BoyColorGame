@@ -44,6 +44,8 @@ uint8_t Registers::smallRegisterValue(const uint8_t identifier) const
         // 0b110 is the identifier for the data stored in the memory address of the HL value
         case Registers::SmallRegisterIdentifier::register_acc: return mAccumulator;
     }
+
+    return 0u;
 }
 
 uint16_t Registers::bigRegisterValue(const BigRegisterIdentifier identifier) const
@@ -71,6 +73,8 @@ uint16_t Registers::bigRegisterValue(const BigRegisterIdentifier identifier) con
             return mStackPointer;
         }
     }
+
+    return 0u;
 }
 
 void Registers::setStackPointer(const uint16_t newValue)
