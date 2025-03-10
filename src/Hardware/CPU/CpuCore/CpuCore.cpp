@@ -567,10 +567,6 @@ void CpuCore::handleZeroOneInstructionBlock() // DONE
 
             mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
         }
-        else if (mCurrentInstruction.currentCycle == 1)
-        {
-            // nothing left to do; let the cycle play out
-        }
 
         return;
     }
@@ -603,7 +599,6 @@ void CpuCore::handleOneZeroInstructionBlock() // DONE
     const uint8_t instructionCode = mRegisters.instructionRegister();
 
     // Arithmetic operations with the accumulator register
-    const uint8_t accumulatorValue = mRegisters.accumulator();
     const Alu::AluOperationType operation = static_cast<Alu::AluOperationType>((instructionCode >> 3) & 0b111);
     const uint8_t registerOperand = instructionCode & 0b111;
 
@@ -616,7 +611,7 @@ void CpuCore::handleOneZeroInstructionBlock() // DONE
         }
         else if (mCurrentInstruction.currentCycle == 1)
         {
-            mAlu.arithmeticOperation(accumulatorValue, mDataBus, operation);
+            mAlu.arithmeticOperation(mDataBus, operation);
         }
         
         return;
@@ -627,16 +622,9 @@ void CpuCore::handleOneZeroInstructionBlock() // DONE
     // 0x90 0x91 0x92 0x93 0x94 0x95 0x97 0x98 0x99 0x9A 0x9B 0x9C 0x9D 0x9F
     // 0xA0 0xA1 0xA2 0xA3 0xA4 0xA5 0xA7 0xA8 0xA9 0xAA 0xAB 0xAC 0xAD 0xAF
     // 0xB0 0xB1 0xB2 0xB3 0xB4 0xB5 0xB7 0xB8 0xB9 0xBA 0xBB 0xBC 0xBD 0xBF
-
     const uint8_t secondRegister = mRegisters.smallRegisterValue(registerOperand);
-
-    bool additionalFlag {};
-    if ((operation == Alu::AluOperationType::add_plus_carry) || (operation == Alu::AluOperationType::subtract_plus_carry))
-    {
-        additionalFlag = mRegisters.flagValue(Registers::FlagsPosition::carry_flag);
-    }
-
-    mAlu.arithmeticOperation(accumulatorValue, secondRegister, operation, additionalFlag);
+    mAlu.arithmeticOperation(secondRegister, operation);
+    
     return;
 }
 
@@ -1058,10 +1046,8 @@ void CpuCore::handleOneOneInstructionBlock()
             }
             else if (mCurrentInstruction.currentCycle == 1)
             {
-                const uint8_t accumulatorValue = mRegisters.accumulator();
                 const Alu::AluOperationType operation = static_cast<Alu::AluOperationType>(firstOperand);
-
-                mAlu.arithmeticOperation(accumulatorValue, mDataBus, operation);
+                mAlu.arithmeticOperation(mDataBus, operation);
                 return;
             }
             break;

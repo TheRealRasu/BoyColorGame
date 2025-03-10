@@ -51,7 +51,7 @@ public:
 
     void flipValue(const uint8_t value);
 
-    void arithmeticOperation(const uint8_t firstValue, const uint8_t secondValue, const AluOperationType opType, bool additionalFlag = false);
+    void arithmeticOperation(const uint8_t otherValue, const AluOperationType opType);
     void bitOperation(const uint8_t value, uint8_t bitIndex, BitOperationType bitType);
 
 private:

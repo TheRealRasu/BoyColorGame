@@ -102,25 +102,35 @@ void Alu::flipValue(const uint8_t value)
     mMemory = ~value;
 }
 
-void Alu::arithmeticOperation(const uint8_t firstValue, const uint8_t secondValue, const AluOperationType opType, bool additionalFlag)
+void Alu::arithmeticOperation(const uint8_t otherValue, const AluOperationType opType)
 {
+    const uint8_t accumulatorValue = mRegisters.accumulator();
+    uint8_t additionalValue = 0;
+
     switch (opType)
     {
-        case AluOperationType::add:
         case AluOperationType::add_plus_carry:
         {
-            mMemory = firstValue + secondValue + !!additionalFlag;
-
+            additionalValue = !!mRegisters.flagValue(Registers::FlagsPosition::carry_flag);
+            [[fallthrough]];
+        }
+        case AluOperationType::add:
+        {
+            mMemory = accumulatorValue + otherValue + additionalValue;
             mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
             mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (((mMemory >> 3) & 0b1) == 0b1));
             mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, (((mMemory >> 7) & 0b1) == 0b1));
             break;
         }
-        case AluOperationType::subtract:
         case AluOperationType::subtract_plus_carry:
+        {
+            additionalValue = !!mRegisters.flagValue(Registers::FlagsPosition::carry_flag);
+            [[fallthrough]];
+        }
+        case AluOperationType::subtract:
         case AluOperationType::compare:
         {
-            mMemory = firstValue - secondValue - !!additionalFlag;
+            mMemory = accumulatorValue - otherValue - additionalValue;
 
             mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, true);
             mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (((mMemory >> 3) & 0b1) == 0b1));
@@ -129,7 +139,7 @@ void Alu::arithmeticOperation(const uint8_t firstValue, const uint8_t secondValu
         }
         case AluOperationType::logical_and:
         {
-            mMemory = firstValue & secondValue;
+            mMemory = accumulatorValue & otherValue;
 
             mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
             mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, true);
@@ -138,7 +148,7 @@ void Alu::arithmeticOperation(const uint8_t firstValue, const uint8_t secondValu
         }
         case AluOperationType::logical_xor:
         {
-            mMemory =  firstValue ^ secondValue;
+            mMemory =  accumulatorValue ^ otherValue;
 
             mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
             mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
@@ -147,7 +157,7 @@ void Alu::arithmeticOperation(const uint8_t firstValue, const uint8_t secondValu
         }
         case AluOperationType::logical_or:
         {
-            mMemory = firstValue | secondValue;
+            mMemory = accumulatorValue | otherValue;
 
             mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
             mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
