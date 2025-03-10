@@ -16,21 +16,15 @@ void Alu::resetMemory()
     mMemory = 0u;
 }
 
-template<typename T>
-void Alu::incrementRegister(T& givenRegister) const
+void Alu::incrementRegister(const uint8_t givenRegister)
 {
-    givenRegister++;
+    mMemory = givenRegister + 1;
 }
-template void Alu::incrementRegister<uint8_t>(uint8_t& givenRegister) const;
-template void Alu::incrementRegister<uint16_t>(uint16_t& givenRegister) const;
 
-template<typename T>
-void Alu::decrementRegister(T& givenValue) const
+void Alu::decrementRegister(const uint8_t givenValue)
 {
-    givenValue--;
+    mMemory = givenValue - 1;
 }
-template void Alu::decrementRegister<uint8_t>(uint8_t& givenValue) const;
-template void Alu::decrementRegister<uint16_t>(uint16_t& givenValue) const;
 
 void Alu::loadValueIntoRegister(const uint8_t registerId, const uint8_t value)
 {

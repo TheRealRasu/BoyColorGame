@@ -390,7 +390,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
                 {
                     uint8_t newValue = mDataBus;
                     mAlu.incrementRegister(newValue);
-                    mMemoryManager.writeToMemoryAddress(mAddressBus, newValue);
+                    mMemoryManager.writeToMemoryAddress(mAddressBus, mAlu.memory());
 
                     mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, newValue == 0);
                     mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
@@ -404,7 +404,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
             {
                 uint8_t newRegisterValue = mRegisters.smallRegisterValue(registerId);
                 mAlu.incrementRegister(newRegisterValue);
-                mRegisters.setSmallRegister(registerId, newRegisterValue);
+                mRegisters.setSmallRegister(registerId, mAlu.memory());
 
                 mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, newRegisterValue == 0);
                 mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
@@ -424,9 +424,9 @@ void CpuCore::handleZeroZeroInstructionBlock()
                 }
                 else if (mCurrentInstruction.currentCycle == 1)
                 {
-                    uint8_t newValue = mDataBus;
+                    const uint8_t newValue = mDataBus;
                     mAlu.decrementRegister(newValue);
-                    mMemoryManager.writeToMemoryAddress(mAddressBus, newValue);
+                    mMemoryManager.writeToMemoryAddress(mAddressBus, mAlu.memory());
 
                     mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, newValue == 0);
                     mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, true);
@@ -438,9 +438,9 @@ void CpuCore::handleZeroZeroInstructionBlock()
             
             if (mCurrentInstruction.currentCycle == 0)
             {
-                uint8_t newRegisterValue = mRegisters.smallRegisterValue(registerId);
+                const uint8_t newRegisterValue = mRegisters.smallRegisterValue(registerId);
                 mAlu.decrementRegister(newRegisterValue);
-                mRegisters.setSmallRegister(registerId, newRegisterValue);
+                mRegisters.setSmallRegister(registerId, mAlu.memory());
 
                 mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, newRegisterValue == 0);
                 mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, true);
@@ -624,7 +624,7 @@ void CpuCore::handleOneZeroInstructionBlock() // DONE
     // 0xB0 0xB1 0xB2 0xB3 0xB4 0xB5 0xB7 0xB8 0xB9 0xBA 0xBB 0xBC 0xBD 0xBF
     const uint8_t secondRegister = mRegisters.smallRegisterValue(registerOperand);
     mAlu.arithmeticOperation(secondRegister, operation);
-    
+
     return;
 }
 

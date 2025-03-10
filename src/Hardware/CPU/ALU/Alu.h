@@ -38,11 +38,8 @@ public:
         set_bit = 0b11
     };
 
-    template<typename T>
-    void incrementRegister(T& givenRegister) const;
-
-    template<typename T>
-    void decrementRegister(T&  givenRegister) const;
+    void incrementRegister(const uint8_t givenRegister);
+    void decrementRegister(const uint8_t givenRegister);
 
     void loadValueIntoRegister(const uint8_t registerId, const uint8_t value);
     void loadRegisterIntoRegister(const uint8_t destRegister, const uint8_t srcRegister);
