@@ -110,32 +110,58 @@ void Alu::arithmeticOperation(const uint8_t firstValue, const uint8_t secondValu
         case AluOperationType::add_plus_carry:
         {
             mMemory = firstValue + secondValue + !!additionalFlag;
+
+            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (((mMemory >> 3) & 0b1) == 0b1));
+            mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, (((mMemory >> 7) & 0b1) == 0b1));
+            break;
         }
         case AluOperationType::subtract:
         case AluOperationType::subtract_plus_carry:
         case AluOperationType::compare:
         {
             mMemory = firstValue - secondValue - !!additionalFlag;
+
+            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, true);
+            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (((mMemory >> 3) & 0b1) == 0b1));
+            mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, (((mMemory >> 7) & 0b1) == 0b1));
+            break;
         }
         case AluOperationType::logical_and:
         {
             mMemory = firstValue & secondValue;
+
+            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, true);
+            mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, false);
+            break;
         }
         case AluOperationType::logical_xor:
         {
             mMemory =  firstValue ^ secondValue;
+
+            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
+            mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, false);
+            break;
         }
         case AluOperationType::logical_or:
         {
             mMemory = firstValue | secondValue;
+
+            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
+            mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, false);
+            break;
         }
     }
+
+    mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, (mMemory == 0));
 
     if (opType != Alu::AluOperationType::compare)
     {
         mRegisters.setAccumulator(mMemory);
     }
-
 }
 
 void Alu::bitOperation(const uint8_t value, uint8_t bitIndex, BitOperationType bitType)

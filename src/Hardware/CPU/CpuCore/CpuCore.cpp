@@ -617,7 +617,6 @@ void CpuCore::handleOneZeroInstructionBlock() // DONE
         else if (mCurrentInstruction.currentCycle == 1)
         {
             mAlu.arithmeticOperation(accumulatorValue, mDataBus, operation);
-            setFlagsAfterArithmeticOperation(operation, mAlu.memory());
         }
         
         return;
@@ -638,8 +637,6 @@ void CpuCore::handleOneZeroInstructionBlock() // DONE
     }
 
     mAlu.arithmeticOperation(accumulatorValue, secondRegister, operation, additionalFlag);
-    setFlagsAfterArithmeticOperation(operation, mAlu.memory());
-
     return;
 }
 
@@ -941,7 +938,7 @@ void CpuCore::handleOneOneInstructionBlock()
 
             return;
         }
-        case 0b011: // 0xC3 0xCB 0xF3 0xFB TODO
+        case 0b011: // 0xC3 0xCB 0xF3 0xFB
         {
             if (firstOperand == 0b000) // 0xC3 JP nn
             {
@@ -974,7 +971,7 @@ void CpuCore::handleOneOneInstructionBlock()
                     }
                 }
             }
-            else if (firstOperand == 0b001) // 0xCB CB op TODO
+            else if (firstOperand == 0b001) // 0xCB CB
             {
                 handleCbInstruction();
             }
@@ -1065,7 +1062,6 @@ void CpuCore::handleOneOneInstructionBlock()
                 const Alu::AluOperationType operation = static_cast<Alu::AluOperationType>(firstOperand);
 
                 mAlu.arithmeticOperation(accumulatorValue, mDataBus, operation);
-                setFlagsAfterArithmeticOperation(operation, mAlu.memory());
                 return;
             }
             break;
