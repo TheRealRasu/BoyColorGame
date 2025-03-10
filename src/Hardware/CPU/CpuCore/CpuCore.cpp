@@ -487,20 +487,10 @@ void CpuCore::handleZeroZeroInstructionBlock()
                 case 0b010: // RLA
                 case 0b011: // RRA
                 {
-                    uint8_t accumulatorValue = mRegisters.accumulator();
-                    bool carryFlag = mRegisters.flagValue(Registers::FlagsPosition::carry_flag);
-                    
                     const bool rotateRight = registerId & 0b1;
                     const bool throughCarry = (registerId >> 1) & 0b1;
 
-                    mAlu.rotateValue(accumulatorValue, carryFlag, rotateRight, throughCarry);
-
-                    mRegisters.setAccumulator(accumulatorValue);
-                    mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, carryFlag);
-
-                    // TODO check if these flag assignments are accurate
-                    mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
-                    mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+                    mAlu.rotateValue(rotateRight, throughCarry);
                     return;
                 }
                 case 0b100: // DAA TODO. Consult with CPU documents

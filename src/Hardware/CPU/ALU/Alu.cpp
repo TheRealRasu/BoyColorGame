@@ -37,8 +37,10 @@ void Alu::loadRegisterIntoRegister(const uint8_t destRegister, const uint8_t src
     mRegisters.setSmallRegister(destRegister, newValue);
 }
 
-void Alu::rotateValue(uint8_t& registerValue, bool& flagValue, const bool rotateRight, const bool throughCarry) const
+void Alu::rotateValue(const bool rotateRight, const bool throughCarry)
 {
+    uint8_t accValue = mRegisters.accumulator();
+    bool flagValue = mRegisters.flagValue(Registers::FlagsPosition::carry_flag);
     // const uint8_t rightShift = rotateRight ? 0u : 7u;
     // const uint8_t leftShift = 7u - rightShift;
     
@@ -59,36 +61,44 @@ void Alu::rotateValue(uint8_t& registerValue, bool& flagValue, const bool rotate
 
     if (rotateRight)
     {
-        const bool newFlag = registerValue & 0b1;
-        registerValue >>= 1;
+        const bool newFlag = accValue & 0b1;
+        accValue >>= 1;
 
         if (throughCarry)
         {
-            registerValue += (flagValue << 7);
+            accValue += (flagValue << 7);
         }
         else
         {
-            registerValue += (newFlag << 7);
+            accValue += (newFlag << 7);
         }
 
         flagValue = newFlag;
     }
     else
     {
-        const bool newFlag = (registerValue >> 7) & 0b1;
-        registerValue <<= 1;
+        const bool newFlag = (accValue >> 7) & 0b1;
+        accValue <<= 1;
                 
         if (throughCarry)
         {
-            registerValue += flagValue;
+            accValue += flagValue;
         }
         else
         {
-            registerValue += newFlag;
+            accValue += newFlag;
         }
         
         flagValue = newFlag;
     }
+
+    mRegisters.setAccumulator(accValue);
+
+    mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, flagValue);
+
+    // TODO check if these flag assignments are accurate
+    mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
+    mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
 }
 
 void Alu::flipValue(const uint8_t value)
@@ -98,33 +108,33 @@ void Alu::flipValue(const uint8_t value)
 
 void Alu::arithmeticOperation(const uint8_t otherValue, const AluOperationType opType)
 {
-    const uint8_t accumulatorValue = mRegisters.accumulator();
-    uint8_t additionalValue = 0;
+    mMemory = mRegisters.accumulator();
 
     switch (opType)
     {
         case AluOperationType::add_plus_carry:
-        {
-            additionalValue = !!mRegisters.flagValue(Registers::FlagsPosition::carry_flag);
-            [[fallthrough]];
-        }
         case AluOperationType::add:
         {
-            mMemory = accumulatorValue + otherValue + additionalValue;
+            mMemory += otherValue;
+            if (opType == AluOperationType::add_plus_carry)
+            {
+                mMemory += !!mRegisters.flagValue(Registers::FlagsPosition::carry_flag);
+            }
+
             mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
             mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (((mMemory >> 3) & 0b1) == 0b1));
             mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, (((mMemory >> 7) & 0b1) == 0b1));
             break;
         }
         case AluOperationType::subtract_plus_carry:
-        {
-            additionalValue = !!mRegisters.flagValue(Registers::FlagsPosition::carry_flag);
-            [[fallthrough]];
-        }
         case AluOperationType::subtract:
         case AluOperationType::compare:
         {
-            mMemory = accumulatorValue - otherValue - additionalValue;
+            mMemory -= otherValue;
+            if (opType == AluOperationType::subtract_plus_carry)
+            {
+                mMemory -= !!mRegisters.flagValue(Registers::FlagsPosition::carry_flag);
+            }
 
             mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, true);
             mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (((mMemory >> 3) & 0b1) == 0b1));
@@ -133,7 +143,7 @@ void Alu::arithmeticOperation(const uint8_t otherValue, const AluOperationType o
         }
         case AluOperationType::logical_and:
         {
-            mMemory = accumulatorValue & otherValue;
+            mMemory &= otherValue;
 
             mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
             mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, true);
@@ -142,7 +152,7 @@ void Alu::arithmeticOperation(const uint8_t otherValue, const AluOperationType o
         }
         case AluOperationType::logical_xor:
         {
-            mMemory =  accumulatorValue ^ otherValue;
+            mMemory ^=  otherValue;
 
             mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
             mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
@@ -151,7 +161,7 @@ void Alu::arithmeticOperation(const uint8_t otherValue, const AluOperationType o
         }
         case AluOperationType::logical_or:
         {
-            mMemory = accumulatorValue | otherValue;
+            mMemory |= otherValue;
 
             mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
             mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
@@ -203,5 +213,4 @@ void Alu::bitOperation(const uint8_t value, uint8_t bitIndex, BitOperationType b
             break;
         }
     }
-
 }

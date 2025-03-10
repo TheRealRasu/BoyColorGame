@@ -44,7 +44,7 @@ public:
     void loadValueIntoRegister(const uint8_t registerId, const uint8_t value);
     void loadRegisterIntoRegister(const uint8_t destRegister, const uint8_t srcRegister);
 
-    void rotateValue(uint8_t& registerValue, bool& flagValue, const bool rotateRight, const bool throughCarry) const;
+    void rotateValue(const bool rotateRight, const bool throughCarry);
 
     void flipValue(const uint8_t value);
 
