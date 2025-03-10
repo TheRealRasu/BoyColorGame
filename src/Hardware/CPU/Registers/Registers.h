@@ -16,6 +16,18 @@ public:
         condition_c = 0b011
     };
 
+    enum class SmallRegisterIdentifier : uint8_t
+    {
+        register_b = 0b000,
+        register_c = 0b001,
+        register_d = 0b010,
+        register_e = 0b011,
+        register_h = 0b100,
+        register_l = 0b101,
+        // 0b110 is the identifier for the data stored in the memory address of the HL value
+        register_acc = 0b111
+    };
+
     enum class BigRegisterIdentifier : uint8_t
     {
         register_bc = 0,

@@ -33,24 +33,17 @@ bool Registers::flagValue(FlagsPosition pos) const
 
 uint8_t Registers::smallRegisterValue(const uint8_t identifier) const
 {
-    switch (identifier)
+    switch (static_cast<Registers::SmallRegisterIdentifier>(identifier))
     {
-        case 0b000: return mBRegister;
-        case 0b001: return mCRegister;
-        case 0b010: return mDRegister;
-        case 0b011: return mERegister;
-        case 0b100: return mHRegister;
-        case 0b101: return mLRegister;
+        case Registers::SmallRegisterIdentifier::register_b: return mBRegister;
+        case Registers::SmallRegisterIdentifier::register_c: return mCRegister;
+        case Registers::SmallRegisterIdentifier::register_d: return mDRegister;
+        case Registers::SmallRegisterIdentifier::register_e: return mERegister;
+        case Registers::SmallRegisterIdentifier::register_h: return mHRegister;
+        case Registers::SmallRegisterIdentifier::register_l: return mLRegister;
         // 0b110 is the identifier for the data stored in the memory address of the HL value
-        case 0b111: return mAccumulator;
-        default:
-        {
-            // do nothing
-            break;
-        }
+        case Registers::SmallRegisterIdentifier::register_acc: return mAccumulator;
     }
-
-    return 0u;
 }
 
 uint16_t Registers::bigRegisterValue(const BigRegisterIdentifier identifier) const
@@ -78,8 +71,6 @@ uint16_t Registers::bigRegisterValue(const BigRegisterIdentifier identifier) con
             return mStackPointer;
         }
     }
-
-    return 0u;
 }
 
 void Registers::setStackPointer(const uint16_t newValue)
@@ -123,47 +114,41 @@ void Registers::setFlagValue(FlagsPosition pos, bool value)
 
 void Registers::setSmallRegister(const uint8_t identifier, const uint8_t value)
 {
-    switch (identifier)
+    switch (static_cast<Registers::SmallRegisterIdentifier>(identifier))
     {
-        case 0b000:
+        case Registers::SmallRegisterIdentifier::register_b:
         {
             mBRegister = value;
             break;
         }
-        case 0b001:
+        case Registers::SmallRegisterIdentifier::register_c:
         {
             mCRegister = value;
             break;
         }
-        case 0b010:
+        case Registers::SmallRegisterIdentifier::register_d:
         {
             mDRegister = value;
             break;
         }
-        case 0b011:
+        case Registers::SmallRegisterIdentifier::register_e:
         {
             mERegister = value;
             break;
         }
-        case 0b100:
+        case Registers::SmallRegisterIdentifier::register_h:
         {
             mHRegister = value;
             break;
         }
-        case 0b101:
+        case Registers::SmallRegisterIdentifier::register_l:
         {
             mLRegister = value;
             break;
         }
-        // 0b110 is the identifier for the data stored in the memory address of the HL value
-        case 0b111:
+        case Registers::SmallRegisterIdentifier::register_acc:
         {
             mAccumulator = value;
-            break;
-        }
-        default:
-        {
-            // do nothing
             break;
         }
     }
