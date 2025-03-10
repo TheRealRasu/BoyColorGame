@@ -44,8 +44,8 @@ public:
     template<typename T>
     void decrementRegister(T&  givenRegister) const;
 
-    template<typename T>
-    void assignRegisterValue(const T& srcRegister, T& destRegister) const;
+    void loadValueIntoRegister(const uint8_t registerId, const uint8_t value);
+    void loadRegisterIntoRegister(const uint8_t destRegister, const uint8_t srcRegister);
 
     void rotateValue(uint8_t& registerValue, bool& flagValue, const bool rotateRight, const bool throughCarry) const;
 

@@ -32,13 +32,16 @@ void Alu::decrementRegister(T& givenValue) const
 template void Alu::decrementRegister<uint8_t>(uint8_t& givenValue) const;
 template void Alu::decrementRegister<uint16_t>(uint16_t& givenValue) const;
 
-template<typename T>
-void Alu::assignRegisterValue(const T& srcRegister, T& destRegister) const
+void Alu::loadValueIntoRegister(const uint8_t registerId, const uint8_t value)
 {
-    destRegister = srcRegister;
+    mRegisters.setSmallRegister(registerId, value);
 }
-template void Alu::assignRegisterValue<uint8_t>(const uint8_t& srcRegister, uint8_t& destRegister) const;
-template void Alu::assignRegisterValue<uint16_t>(const uint16_t& srcRegister, uint16_t& destRegister) const;
+
+void Alu::loadRegisterIntoRegister(const uint8_t destRegister, const uint8_t srcRegister)
+{
+    const uint8_t newValue = mRegisters.smallRegisterValue(srcRegister);
+    mRegisters.setSmallRegister(destRegister, newValue);
+}
 
 void Alu::rotateValue(uint8_t& registerValue, bool& flagValue, const bool rotateRight, const bool throughCarry) const
 {
@@ -127,6 +130,12 @@ void Alu::arithmeticOperation(const uint8_t firstValue, const uint8_t secondValu
             mMemory = firstValue | secondValue;
         }
     }
+
+    if (opType != Alu::AluOperationType::compare)
+    {
+        mRegisters.setAccumulator(mMemory);
+    }
+
 }
 
 void Alu::bitOperation(const uint8_t value, uint8_t bitIndex, BitOperationType bitType)

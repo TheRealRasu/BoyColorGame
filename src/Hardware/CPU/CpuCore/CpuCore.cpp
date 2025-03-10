@@ -473,10 +473,7 @@ void CpuCore::handleZeroZeroInstructionBlock()
             }
             else if (mCurrentInstruction.currentCycle == 1)
             {
-                uint8_t registerValue = mRegisters.smallRegisterValue(registerId);
-                mAlu.assignRegisterValue(mDataBus, registerValue);
-
-                mRegisters.setSmallRegister(registerId, registerValue);
+                mAlu.loadValueIntoRegister(registerId, mDataBus);
             }
 
             break;
@@ -552,21 +549,21 @@ void CpuCore::handleZeroOneInstructionBlock() // DONE
 {
     const uint8_t instructionCode = mRegisters.instructionRegister();
 
-    const uint8_t firstOperand = (instructionCode >> 3) & 0b111;
-    const uint8_t secondOperand = instructionCode & 0b111;
+    const uint8_t firstRegister = (instructionCode >> 3) & 0b111;
+    const uint8_t secondRegister = instructionCode & 0b111;
 
-    if (firstOperand == 0b110 && secondOperand == 0b110) // special case: 0x76 HALT
+    if (firstRegister == 0b110 && secondRegister == 0b110) // special case: 0x76 HALT
     {
         mRegisters.setInterruptEnable(0);
         return;
     }
 
-    if (firstOperand == 0b110) // 0x70 0x71 0x72 0x73 0x74 0x75 0x77 special case: LD (HL), n
+    if (firstRegister == 0b110) // 0x70 0x71 0x72 0x73 0x74 0x75 0x77 special case: LD (HL), r
     {
         if (mCurrentInstruction.currentCycle == 0)
         {
             mAddressBus = mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl);
-            mDataBus = mRegisters.smallRegisterValue(secondOperand);
+            mDataBus = mRegisters.smallRegisterValue(secondRegister);
 
             mMemoryManager.writeToMemoryAddress(mAddressBus, mDataBus);
         }
@@ -578,7 +575,7 @@ void CpuCore::handleZeroOneInstructionBlock() // DONE
         return;
     }
 
-    if (secondOperand == 0b110) // 0x46 0x56 0x66 0x4E 0x5E 0x6E 0x7E special case: LD n, (HL)
+    if (secondRegister == 0b110) // 0x46 0x56 0x66 0x4E 0x5E 0x6E 0x7E special case: LD r, (HL)
     {
         if (mCurrentInstruction.currentCycle == 0)
         {
@@ -587,10 +584,7 @@ void CpuCore::handleZeroOneInstructionBlock() // DONE
         }
         else if (mCurrentInstruction.currentCycle == 1)
         {
-            uint8_t registerValue = mRegisters.smallRegisterValue(firstOperand);
-            mAlu.assignRegisterValue(mDataBus, registerValue);
-
-            mRegisters.setSmallRegister(secondOperand, registerValue);
+            mAlu.loadValueIntoRegister(firstRegister, mDataBus);
         }
             
         return;
@@ -601,14 +595,7 @@ void CpuCore::handleZeroOneInstructionBlock() // DONE
     // 0x50 0x51 0x52 0x53 0x54 0x55 0x57 0x58 0x59 0x5A 0x5B 0x5C 0x5D 0x5F
     // 0x60 0x61 0x62 0x63 0x64 0x65 0x67 0x68 0x69 0x6A 0x6B 0x6C 0x6D 0x6F
     // 0x70 0x71 0x72 0x73 0x74 0x75 0x77 0x78 0x79 0x7A 0x7B 0x7C 0x7D 0x7F
-
-    uint8_t registerValue = mRegisters.smallRegisterValue(firstOperand);
-    const uint8_t srcRegister = mRegisters.smallRegisterValue(secondOperand);
-
-    mAlu.assignRegisterValue(srcRegister, registerValue);
-    mRegisters.setSmallRegister(firstOperand, registerValue);
-
-    return;
+    mAlu.loadRegisterIntoRegister(firstRegister, secondRegister);
 }
 
 void CpuCore::handleOneZeroInstructionBlock() // DONE
@@ -630,12 +617,6 @@ void CpuCore::handleOneZeroInstructionBlock() // DONE
         else if (mCurrentInstruction.currentCycle == 1)
         {
             mAlu.arithmeticOperation(accumulatorValue, mDataBus, operation);
-            
-            if (operation != Alu::AluOperationType::compare)
-            {
-                mRegisters.setAccumulator(mAlu.memory());
-            }
-
             setFlagsAfterArithmeticOperation(operation, mAlu.memory());
         }
         
@@ -657,13 +638,8 @@ void CpuCore::handleOneZeroInstructionBlock() // DONE
     }
 
     mAlu.arithmeticOperation(accumulatorValue, secondRegister, operation, additionalFlag);
-    
-    if (operation != Alu::AluOperationType::compare)
-    {
-        mRegisters.setAccumulator(mAlu.memory());
-    }
-
     setFlagsAfterArithmeticOperation(operation, mAlu.memory());
+
     return;
 }
 
@@ -1087,13 +1063,8 @@ void CpuCore::handleOneOneInstructionBlock()
             {
                 const uint8_t accumulatorValue = mRegisters.accumulator();
                 const Alu::AluOperationType operation = static_cast<Alu::AluOperationType>(firstOperand);
-                mAlu.arithmeticOperation(accumulatorValue, mDataBus, operation);
-                
-                if (operation != Alu::AluOperationType::compare)
-                {
-                    mRegisters.setAccumulator(mAlu.memory());
-                }
 
+                mAlu.arithmeticOperation(accumulatorValue, mDataBus, operation);
                 setFlagsAfterArithmeticOperation(operation, mAlu.memory());
                 return;
             }
