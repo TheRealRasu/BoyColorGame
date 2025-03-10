@@ -154,6 +154,10 @@ void Alu::bitOperation(const uint8_t value, uint8_t bitIndex, BitOperationType b
 
             mMemory = !!bitTest;
             break;
+    
+            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, true);
+            mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, bitTest == false);
+            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
         }
         case BitOperationType::reset_bit:
         {
@@ -169,4 +173,5 @@ void Alu::bitOperation(const uint8_t value, uint8_t bitIndex, BitOperationType b
             break;
         }
     }
+
 }

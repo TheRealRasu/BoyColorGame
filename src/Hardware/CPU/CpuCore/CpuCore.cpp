@@ -1393,13 +1393,7 @@ void CpuCore::handleCbInstruction()
             {
                 mAlu.bitOperation(mDataBus, bitId, static_cast<Alu::BitOperationType>(instructionBlock));
 
-                if (instructionBlock == 0b01) // Test (HL) bit
-                {
-                    mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, true);
-                    mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, (mAlu.memory() == 0));
-                    mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
-                }
-                else
+                if (instructionBlock != 0b01) 
                 {
                     mMemoryManager.writeToMemoryAddress(mAddressBus, mAlu.memory());
                 }
@@ -1416,13 +1410,10 @@ void CpuCore::handleCbInstruction()
         {
             const uint8_t registerValue = mRegisters.smallRegisterValue(registerId);
             mAlu.bitOperation(registerValue, bitId, static_cast<Alu::BitOperationType>(instructionBlock));
-            mRegisters.setSmallRegister(registerId, mAlu.memory());
-
-            if (instructionBlock == 0b01) // test bit instructions set flags, the others do not
+            
+            if (instructionBlock != 0b01) 
             {
-                mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, true);
-                mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, (mAlu.memory() == 0));
-                mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+                mRegisters.setSmallRegister(registerId, mAlu.memory());
             }
         }
     }
