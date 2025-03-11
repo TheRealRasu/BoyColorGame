@@ -39,7 +39,6 @@ private:
     void handleOneZeroInstructionBlock();
     void handleOneOneInstructionBlock();
 
-    void setFlagsAfterArithmeticOperation(Alu::AluOperationType operation, uint8_t result);
     void unconditionalFunctionCall();
     void conditionalFunctionCall();
     void callAddress();

@@ -228,23 +228,13 @@ void CpuCore::handleZeroZeroInstructionBlock()
                 {
                     mAddressBus = 0x0000;
 
-                    const uint8_t lRegister = static_cast<uint8_t>(mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl) & 0xFF);
                     const uint8_t otherValue = static_cast<uint8_t>(otherRegisterValue & 0xFF);
-
-                    const uint8_t result = lRegister + otherValue; // TODO move this to ALU
-                    setFlagsAfterArithmeticOperation(Alu::AluOperationType::add, result);
-
-                    mRegisters.setSmallRegister(0b101, result);
+                    mAlu.addToRegister(static_cast<uint8_t>(Registers::SmallRegisterIdentifier::register_l), otherValue);
                 }
                 else if (mCurrentInstruction.currentCycle == 1)
                 {
-                    const uint8_t hRegister = static_cast<uint8_t>(mRegisters.bigRegisterValue(Registers::BigRegisterIdentifier::register_hl) >> 8);
-                    const uint8_t otherValue = static_cast<uint8_t>(otherRegisterValue >> 8);
-
-                    const uint8_t result = hRegister + otherValue + !!mRegisters.flagValue(Registers::FlagsPosition::carry_flag); // TODO move this to ALU
-                    setFlagsAfterArithmeticOperation(Alu::AluOperationType::add, result);
-
-                    mRegisters.setSmallRegister(0b100, result);
+                    const uint8_t otherValue = static_cast<uint8_t>(otherRegisterValue >> 8) + !!mRegisters.flagValue(Registers::FlagsPosition::carry_flag);
+                    mAlu.addToRegister(static_cast<uint8_t>(Registers::SmallRegisterIdentifier::register_h), otherValue);
                 }
             }
             else // 0x01 0x11 0x21 0x31 LD rr, nn
@@ -992,31 +982,6 @@ void CpuCore::handleOneOneInstructionBlock()
         case 0b111: // 0xC7 0xCF 0xD7 0xDF 0xE7 0xEF 0xF7 0xFF 'RST 0xNN'
         {
             unconditionalFunctionCall();
-            break;
-        }
-    }
-}
-
-void CpuCore::setFlagsAfterArithmeticOperation(Alu::AluOperationType operation, uint8_t result)
-{
-    switch (operation)
-    {
-        case Alu::AluOperationType::add:
-        {
-            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
-            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (((result >> 3) & 0b1) == 0b1));
-            mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, (((result >> 7) & 0b1) == 0b1));
-            mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, (result == 0));
-            break;
-        }
-        case Alu::AluOperationType::add_plus_carry:
-        case Alu::AluOperationType::subtract:
-        case Alu::AluOperationType::subtract_plus_carry:
-        case Alu::AluOperationType::compare:
-        case Alu::AluOperationType::logical_and:
-        case Alu::AluOperationType::logical_xor:
-        case Alu::AluOperationType::logical_or:
-        {
             break;
         }
     }

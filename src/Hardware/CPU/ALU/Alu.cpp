@@ -44,6 +44,14 @@ void Alu::decrementValue(const uint8_t givenValue)
     setFlagsAfterOperation(Alu::AluOperationType::subtract, false);
 }
 
+void Alu::addToRegister(const uint8_t registerId, const uint8_t value)
+{
+    mMemory = mRegisters.smallRegisterValue(registerId) + value;
+    mRegisters.setSmallRegister(registerId, mMemory);
+
+    setFlagsAfterOperation(Alu::AluOperationType::add, true, false);
+}
+
 void Alu::loadValueIntoRegister(const uint8_t registerId, const uint8_t value)
 {
     mRegisters.setSmallRegister(registerId, value);
@@ -213,7 +221,7 @@ void Alu::bitOperation(const uint8_t value, uint8_t bitIndex, BitOperationType b
     }
 }
 
-void Alu::setFlagsAfterOperation(const AluOperationType opType, const bool includeCarryFlag)
+void Alu::setFlagsAfterOperation(const AluOperationType opType, const bool includeCarryFlag, const bool includeZeroFlag = true)
 {
     switch (opType)
     {
@@ -262,5 +270,5 @@ void Alu::setFlagsAfterOperation(const AluOperationType opType, const bool inclu
         }
     }
 
-    mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, (mMemory == 0));
+    if (includeZeroFlag) mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, (mMemory == 0));
 }

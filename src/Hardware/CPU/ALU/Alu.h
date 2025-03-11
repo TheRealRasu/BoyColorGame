@@ -44,6 +44,8 @@ public:
     void incrementValue(const uint8_t givenValue);
     void decrementValue(const uint8_t givenValue);
 
+    void addToRegister(const uint8_t registerId, const uint8_t value);
+
     void loadValueIntoRegister(const uint8_t registerId, const uint8_t value);
     void loadRegisterIntoRegister(const uint8_t destRegister, const uint8_t srcRegister);
 
@@ -55,7 +57,7 @@ public:
     void bitOperation(const uint8_t value, uint8_t bitIndex, BitOperationType bitType);
 
 private:
-    void setFlagsAfterOperation(const AluOperationType opType, const bool includeCarryFlag);
+    void setFlagsAfterOperation(const AluOperationType opType, const bool includeCarryFlag, const bool includeZeroFlag);
 
     Registers& mRegisters;
 
