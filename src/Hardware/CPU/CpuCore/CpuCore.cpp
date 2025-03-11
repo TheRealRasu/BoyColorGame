@@ -435,9 +435,16 @@ void CpuCore::handleZeroZeroInstructionBlock()
                 case 0b011: // RRA
                 {
                     const bool rotateRight = registerId & 0b1;
-                    const bool throughCarry = (registerId >> 1) & 0b1;
+                    const bool circular = ((registerId >> 1) & 0b1) == false;
 
-                    mAlu.rotateValue(rotateRight, throughCarry);
+                    if (rotateRight)
+                    {
+                        mAlu.rotateRight(static_cast<uint8_t>(Registers::SmallRegisterIdentifier::register_acc), circular);
+                    }
+                    else
+                    {
+                        mAlu.rotateLeft(static_cast<uint8_t>(Registers::SmallRegisterIdentifier::register_acc), circular);
+                    }
                     return;
                 }
                 case 0b100: // DAA 
@@ -1241,6 +1248,39 @@ void CpuCore::handleCbInstruction()
     }
     else if (instructionBlock == 0b00)
     {
+        switch (bitId)
+        {
+            case 0b000: // RLC r
+            {
+                mAlu.rotateLeft(registerId, true);
+                break;
+            }
+            case 0b001: // RRC r
+            {
+                mAlu.rotateRight(registerId, true);
+                break;
+            }
+            case 0b010: // RL r
+            {
+                mAlu.rotateLeft(registerId, false);
+                break;
+            }
+            case 0b011: // RR r
+            {
+                mAlu.rotateRight(registerId, false);
+                break;
+            }
+            case 0b100: // SLA r
+            case 0b101: // SRA r
+            case 0b110: // SWAP r
+            case 0b111: // SRL r
+            {
+                // TODO
+                break;
+            }
+        }
+
+        return;
         // TODO various instructions 
     }
     else // neither HL nor 0b00

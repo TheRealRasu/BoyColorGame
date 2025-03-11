@@ -63,65 +63,41 @@ void Alu::loadRegisterIntoRegister(const uint8_t destRegister, const uint8_t src
     mRegisters.setSmallRegister(destRegister, newValue);
 }
 
-void Alu::rotateValue(const bool rotateRight, const bool throughCarry)
+void Alu::rotateLeft(const uint8_t registerId, const bool circular)
 {
-    uint8_t accValue = mRegisters.accumulator();
-    bool flagValue = mRegisters.flagValue(Registers::FlagsPosition::carry_flag);
-    // const uint8_t rightShift = rotateRight ? 0u : 7u;
-    // const uint8_t leftShift = 7u - rightShift;
-    
-    // const bool newFlag = (registerValue >> rightShift) & 0b1;
+    mMemory = mRegisters.smallRegisterValue(registerId);
 
-    // if (rotateRight)
-    // {
-    //     registerValue >>= 1;
-    // }
-    // else
-    // {
-    //     registerValue <<= 1;
-    // }
+    const bool highestBit = (mMemory >> 7) & 0b1;
+    const bool shiftedBit = circular ? highestBit : mRegisters.flagValue(Registers::FlagsPosition::carry_flag);
 
-    // const bool& additionalFlag = throughCarry ? flagValue : newFlag;
+    mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, highestBit);
 
-    // registerValue += additionalFlag << leftShift;
+    mMemory <<= 1;
+    mMemory += shiftedBit;
 
-    if (rotateRight)
-    {
-        const bool newFlag = accValue & 0b1;
-        accValue >>= 1;
+    mRegisters.setSmallRegister(registerId, mMemory);
 
-        if (throughCarry)
-        {
-            accValue += (flagValue << 7);
-        }
-        else
-        {
-            accValue += (newFlag << 7);
-        }
+    // TODO set flags
+    // TODO check if these flag assignments are accurate
+    mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
+    mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+}
 
-        flagValue = newFlag;
-    }
-    else
-    {
-        const bool newFlag = (accValue >> 7) & 0b1;
-        accValue <<= 1;
-                
-        if (throughCarry)
-        {
-            accValue += flagValue;
-        }
-        else
-        {
-            accValue += newFlag;
-        }
-        
-        flagValue = newFlag;
-    }
+void Alu::rotateRight(const uint8_t registerId, const bool circular)
+{
+    mMemory = mRegisters.smallRegisterValue(registerId);
 
-    mRegisters.setAccumulator(accValue);
+    const bool lowestBit = mMemory & 0b1;
+    const bool shiftedBit = circular ? lowestBit : mRegisters.flagValue(Registers::FlagsPosition::carry_flag);
 
-    mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, flagValue);
+    mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, lowestBit);
 
+    mMemory >>= 1;
+    mMemory += (shiftedBit << 7);
+
+    mRegisters.setSmallRegister(registerId, mMemory);
+
+    // TODO set flags
     // TODO check if these flag assignments are accurate
     mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
     mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
@@ -241,8 +217,10 @@ void Alu::complementCarryFlag()
     mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, carry == false);
 }
 
-void decimalAdjustAccumulator()
+void Alu::decimalAdjustAccumulator()
 {
+    mMemory = mRegisters.accumulator();
+
     // TODO. Consult with CPU documents
 }
 
