@@ -29,36 +29,50 @@ void Idu::assignValue(const uint16_t value)
     mMemory = value;
 }
 
-void Idu::increaseRegister(Registers::BigRegisterIdentifier bigRegister, const uint16_t value)
+void Idu::assignAndIncrementRegister(Registers::BigRegisterIdentifier bigRegister, const uint16_t value)
 {
-    mRegisters.setBigRegister(bigRegister, value + 1);
+    mMemory = value + 1;
+    mRegisters.setBigRegister(bigRegister, mMemory);
 }
 
-void Idu::decreaseRegister(Registers::BigRegisterIdentifier bigRegister, const uint16_t value)
+void Idu::assignAndDecrementRegister(Registers::BigRegisterIdentifier bigRegister, const uint16_t value)
 {
-    mRegisters.setBigRegister(bigRegister, value - 1);
+    mMemory = value - 1;
+    mRegisters.setBigRegister(bigRegister, mMemory);
+}
+
+void Idu::incrementRegister(Registers::BigRegisterIdentifier registerId)
+{
+    mMemory = mRegisters.bigRegisterValue(registerId) + 1;
+    mRegisters.setBigRegister(registerId, mMemory);
+}
+
+void Idu::decrementRegister(Registers::BigRegisterIdentifier registerId)
+{
+    mMemory = mRegisters.bigRegisterValue(registerId) - 1;
+    mRegisters.setBigRegister(registerId, mMemory);
 }
 
 void Idu::incrementProgramCounter()
 {
-    const uint16_t programCounter = mRegisters.programCounter();
-    mRegisters.setProgramCounter(programCounter + 1);
+    mMemory = mRegisters.programCounter() + 1;
+    mRegisters.setProgramCounter(mMemory);
 }
 
 void Idu::decrementProgramCounter()
 {
-    const uint16_t programCounter = mRegisters.programCounter();
-    mRegisters.setProgramCounter(programCounter - 1);
+    mMemory = mRegisters.programCounter() - 1;
+    mRegisters.setProgramCounter(mMemory);
 }
 
 void Idu::incrementStackPointer()
 {
-    const uint16_t stackPointer = mRegisters.stackPointer();
-    mRegisters.setStackPointer(stackPointer + 1);
+    mMemory = mRegisters.stackPointer() + 1;
+    mRegisters.setStackPointer(mMemory);
 }
 
 void Idu::decrementStackPointer()
 {
-    const uint16_t stackPointer = mRegisters.stackPointer();
-    mRegisters.setStackPointer(stackPointer - 1);
+    mMemory = mRegisters.stackPointer() - 1;
+    mRegisters.setStackPointer(mMemory);
 }

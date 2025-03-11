@@ -25,8 +25,11 @@ public:
 
     void assignValue(const uint16_t value);
 
-    void increaseRegister(Registers::BigRegisterIdentifier bigRegister, const uint16_t value);
-    void decreaseRegister(Registers::BigRegisterIdentifier bigRegister, const uint16_t value);
+    void assignAndIncrementRegister(Registers::BigRegisterIdentifier bigRegister, const uint16_t value);
+    void assignAndDecrementRegister(Registers::BigRegisterIdentifier bigRegister, const uint16_t value);
+
+    void incrementRegister(Registers::BigRegisterIdentifier registerId);
+    void decrementRegister(Registers::BigRegisterIdentifier registerId);
 
     void incrementProgramCounter();
     void decrementProgramCounter();

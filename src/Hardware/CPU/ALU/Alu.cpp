@@ -18,12 +18,30 @@ void Alu::resetMemory()
 
 void Alu::incrementRegister(const uint8_t givenRegister)
 {
-    mMemory = givenRegister + 1;
+    mMemory = mRegisters.smallRegisterValue(givenRegister) + 1;
+    mRegisters.setSmallRegister(givenRegister, mMemory);
+
+    setFlagsAfterOperation(Alu::AluOperationType::add, false);
 }
 
-void Alu::decrementRegister(const uint8_t givenValue)
+void Alu::decrementRegister(const uint8_t givenRegister)
+{
+    mMemory = mRegisters.smallRegisterValue(givenRegister) - 1;
+    mRegisters.setSmallRegister(givenRegister, mMemory);
+
+    setFlagsAfterOperation(Alu::AluOperationType::subtract, false);
+}
+
+void Alu::incrementValue(const uint8_t givenValue)
+{
+    mMemory = givenValue + 1;
+    setFlagsAfterOperation(Alu::AluOperationType::add, false);
+}
+
+void Alu::decrementValue(const uint8_t givenValue)
 {
     mMemory = givenValue - 1;
+    setFlagsAfterOperation(Alu::AluOperationType::subtract, false);
 }
 
 void Alu::loadValueIntoRegister(const uint8_t registerId, const uint8_t value)
@@ -106,7 +124,7 @@ void Alu::flipValue(const uint8_t value)
     mMemory = ~value;
 }
 
-void Alu::arithmeticOperation(const uint8_t otherValue, const AluOperationType opType)
+void Alu::arithmeticAccumulatorOperation(const uint8_t otherValue, const AluOperationType opType)
 {
     mMemory = mRegisters.accumulator();
 
@@ -120,10 +138,6 @@ void Alu::arithmeticOperation(const uint8_t otherValue, const AluOperationType o
             {
                 mMemory += !!mRegisters.flagValue(Registers::FlagsPosition::carry_flag);
             }
-
-            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
-            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (((mMemory >> 3) & 0b1) == 0b1));
-            mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, (((mMemory >> 7) & 0b1) == 0b1));
             break;
         }
         case AluOperationType::subtract_plus_carry:
@@ -135,42 +149,26 @@ void Alu::arithmeticOperation(const uint8_t otherValue, const AluOperationType o
             {
                 mMemory -= !!mRegisters.flagValue(Registers::FlagsPosition::carry_flag);
             }
-
-            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, true);
-            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (((mMemory >> 3) & 0b1) == 0b1));
-            mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, (((mMemory >> 7) & 0b1) == 0b1));
             break;
         }
         case AluOperationType::logical_and:
         {
             mMemory &= otherValue;
-
-            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
-            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, true);
-            mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, false);
             break;
         }
         case AluOperationType::logical_xor:
         {
             mMemory ^=  otherValue;
-
-            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
-            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
-            mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, false);
             break;
         }
         case AluOperationType::logical_or:
         {
             mMemory |= otherValue;
-
-            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
-            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
-            mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, false);
             break;
         }
     }
 
-    mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, (mMemory == 0));
+    setFlagsAfterOperation(opType, true);
 
     if (opType != Alu::AluOperationType::compare)
     {
@@ -213,4 +211,56 @@ void Alu::bitOperation(const uint8_t value, uint8_t bitIndex, BitOperationType b
             break;
         }
     }
+}
+
+void Alu::setFlagsAfterOperation(const AluOperationType opType, const bool includeCarryFlag)
+{
+    switch (opType)
+    {
+        case AluOperationType::add_plus_carry:
+        case AluOperationType::add:
+        {
+            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (((mMemory >> 3) & 0b1) == 0b1));
+            if (includeCarryFlag) mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, (((mMemory >> 7) & 0b1) == 0b1));
+
+            break;
+        }
+        case AluOperationType::subtract_plus_carry:
+        case AluOperationType::subtract:
+        case AluOperationType::compare:
+        {
+            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, true);
+            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (((mMemory >> 3) & 0b1) == 0b1));
+            if (includeCarryFlag) mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, (((mMemory >> 7) & 0b1) == 0b1));
+
+            break;
+        }
+        case AluOperationType::logical_and:
+        {
+            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, true);
+            if (includeCarryFlag) mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, false);
+
+            break;
+        }
+        case AluOperationType::logical_xor:
+        {
+            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
+            if (includeCarryFlag) mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, false);
+
+            break;
+        }
+        case AluOperationType::logical_or:
+        {
+            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
+            if (includeCarryFlag) mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, false);
+
+            break;
+        }
+    }
+
+    mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, (mMemory == 0));
 }

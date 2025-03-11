@@ -41,6 +41,9 @@ public:
     void incrementRegister(const uint8_t givenRegister);
     void decrementRegister(const uint8_t givenRegister);
 
+    void incrementValue(const uint8_t givenValue);
+    void decrementValue(const uint8_t givenValue);
+
     void loadValueIntoRegister(const uint8_t registerId, const uint8_t value);
     void loadRegisterIntoRegister(const uint8_t destRegister, const uint8_t srcRegister);
 
@@ -48,10 +51,12 @@ public:
 
     void flipValue(const uint8_t value);
 
-    void arithmeticOperation(const uint8_t otherValue, const AluOperationType opType);
+    void arithmeticAccumulatorOperation(const uint8_t otherValue, const AluOperationType opType);
     void bitOperation(const uint8_t value, uint8_t bitIndex, BitOperationType bitType);
 
 private:
+    void setFlagsAfterOperation(const AluOperationType opType, const bool includeCarryFlag);
+
     Registers& mRegisters;
 
     uint8_t mMemory {};
