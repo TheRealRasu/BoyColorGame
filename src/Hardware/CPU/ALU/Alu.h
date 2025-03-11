@@ -63,7 +63,7 @@ public:
     void decimalAdjustAccumulator();
 
 private:
-    void setFlagsAfterOperation(const AluOperationType opType, const bool includeCarryFlag, const bool includeZeroFlag);
+    void setFlagsAfterOperation(const AluOperationType opType, const bool includeCarryFlag, const bool includeZeroFlag = true);
 
     Registers& mRegisters;
 

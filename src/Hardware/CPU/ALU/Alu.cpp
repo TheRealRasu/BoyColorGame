@@ -224,7 +224,7 @@ void Alu::decimalAdjustAccumulator()
     // TODO. Consult with CPU documents
 }
 
-void Alu::setFlagsAfterOperation(const AluOperationType opType, const bool includeCarryFlag, const bool includeZeroFlag = true)
+void Alu::setFlagsAfterOperation(const AluOperationType opType, const bool includeCarryFlag, const bool includeZeroFlag)
 {
     switch (opType)
     {
