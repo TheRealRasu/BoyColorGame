@@ -194,7 +194,7 @@ void Registers::setBigRegister(const BigRegisterIdentifier identifier, const uin
     }
 }
 
-bool Registers::checkFlagCondition(FlagCondition condition)
+bool Registers::checkFlagCondition(FlagCondition condition) const
 {
     switch (condition)
     {
@@ -217,4 +217,31 @@ bool Registers::checkFlagCondition(FlagCondition condition)
     }
 
     return false;
+}
+
+Registers::BigRegisterIdentifier Registers::instructionToBigRegisterId(const uint8_t instructionCode)
+{
+    switch (instructionCode >> 4 & 0b11)
+    {
+        case 0b00: return Registers::BigRegisterIdentifier::register_bc;
+        case 0b01: return Registers::BigRegisterIdentifier::register_de;
+        case 0b10: return Registers::BigRegisterIdentifier::register_hl;
+        case 0b11: // 0b11 either returns AF, HL, or SP, depending on other instruction bits
+        {
+            if (((instructionCode >> 6) & 0b11) == 0b11)
+            {
+                return Registers::BigRegisterIdentifier::register_af;
+            }
+
+            if ((instructionCode & 0b11) == 0b10)
+            {
+                return Registers::BigRegisterIdentifier::register_hl;
+            }           
+
+            return Registers::BigRegisterIdentifier::register_sp;
+        }
+        default: break;
+    }
+
+    return Registers::BigRegisterIdentifier::register_bc;
 }

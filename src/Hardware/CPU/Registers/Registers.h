@@ -69,7 +69,8 @@ public:
     void setBigRegister(const BigRegisterIdentifier identifier, const uint16_t value);
 
     // misc.
-    bool checkFlagCondition(FlagCondition condition);
+    bool checkFlagCondition(FlagCondition condition) const;
+    static Registers::BigRegisterIdentifier instructionToBigRegisterId(const uint8_t instructionCode);
 
 protected:
     uint8_t mInstructionRegister {};

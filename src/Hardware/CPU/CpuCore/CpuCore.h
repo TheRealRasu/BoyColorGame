@@ -31,6 +31,7 @@ public:
     void handleCurrentInstruction();
 
 private:
+    // methods for instructions
     void executeInstruction();
     
     void handleZeroZeroInstructionBlock();
@@ -38,10 +39,6 @@ private:
     void handleOneZeroInstructionBlock();
     void handleOneOneInstructionBlock();
 
-    // convenience methods
-    Registers::BigRegisterIdentifier instructionToBigRegisterValue() const;
-
-    // methods for instructions
     void setFlagsAfterArithmeticOperation(Alu::AluOperationType operation, uint8_t result);
     void unconditionalFunctionCall();
     void conditionalFunctionCall();
