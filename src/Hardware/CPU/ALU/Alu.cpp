@@ -127,9 +127,13 @@ void Alu::rotateValue(const bool rotateRight, const bool throughCarry)
     mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
 }
 
-void Alu::flipValue(const uint8_t value)
+void Alu::flipRegister(const uint8_t registerId)
 {
-    mMemory = ~value;
+    mMemory = ~mRegisters.smallRegisterValue(registerId);
+    mRegisters.setSmallRegister(registerId, mMemory);
+    
+    mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, true);
+    mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, true);
 }
 
 void Alu::arithmeticAccumulatorOperation(const uint8_t otherValue, const AluOperationType opType)
@@ -219,6 +223,27 @@ void Alu::bitOperation(const uint8_t value, uint8_t bitIndex, BitOperationType b
             break;
         }
     }
+}
+
+void Alu::setCarryFlag()
+{
+    mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+    mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
+    mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, true);
+}
+
+void Alu::complementCarryFlag()
+{
+    mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
+    mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
+
+    const bool carry = mRegisters.flagValue(Registers::FlagsPosition::carry_flag);
+    mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, carry == false);
+}
+
+void decimalAdjustAccumulator()
+{
+    // TODO. Consult with CPU documents
 }
 
 void Alu::setFlagsAfterOperation(const AluOperationType opType, const bool includeCarryFlag, const bool includeZeroFlag = true)

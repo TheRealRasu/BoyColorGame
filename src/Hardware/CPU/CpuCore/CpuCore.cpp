@@ -3,6 +3,7 @@
 #include "../OpcodeCycleMap.h"
 
 #include <cstdint>
+#include <limits>
 
 CpuCore::CpuCore()
     : mAlu(mRegisters),
@@ -30,9 +31,18 @@ void CpuCore::loadNewInstruction()
     
     // reset Instruction struct
     mCurrentInstruction.currentCycle = 0;
-    mCurrentInstruction.instructionCycles = cyclesPerOpcode.at(mDataBus);
     mCurrentInstruction.conditionMet = false;
     mCurrentInstruction.temporalData.clear();
+
+    // get opcode cycles. Undefined instructions lock the CPU
+    try
+    {
+        mCurrentInstruction.instructionCycles = cyclesPerOpcode.at(mDataBus);
+    }
+    catch (std::exception&)
+    {
+        mCurrentInstruction.instructionCycles = std::numeric_limits<uint8_t>::max();
+    }
 
     // first cycle is always executed during this method
     mIdu.incrementProgramCounter();
@@ -430,35 +440,24 @@ void CpuCore::handleZeroZeroInstructionBlock()
                     mAlu.rotateValue(rotateRight, throughCarry);
                     return;
                 }
-                case 0b100: // DAA TODO. Consult with CPU documents
+                case 0b100: // DAA 
                 {
-                    // TODO
+                    mAlu.decimalAdjustAccumulator();
                     return;
                 }
-                case 0b101: // complement accumulator
+                case 0b101: // CPL
                 {
-                    uint8_t accumulator = mRegisters.accumulator();
-                    mAlu.flipValue(accumulator);
-                    mRegisters.setAccumulator(mAlu.memory());
-
-                    mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, true);
-                    mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, true);
+                    mAlu.flipRegister(static_cast<uint8_t>(Registers::SmallRegisterIdentifier::register_acc));
                     return;
                 }
                 case 0b110: // set carry flag
                 {
-                    mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
-                    mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
-                    mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, true);
+                    mAlu.setCarryFlag();
                     return;
                 }
                 case 0b111: // complement carry flag
                 {
-                    mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
-                    mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
-
-                    const bool carryFlag = mRegisters.flagValue(Registers::FlagsPosition::carry_flag);
-                    mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, (carryFlag == false));
+                    mAlu.complementCarryFlag();
                     return;
                 }
             }
@@ -606,10 +605,11 @@ void CpuCore::handleOneOneInstructionBlock()
                     mDataBus += (mRegisters.stackPointer() & 0xFF);
 
                     mRegisters.setFlagValue(Registers::FlagsPosition::zero_flag, false);
+                    /*
                     mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
                     mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, (mDataBus >> 3 & 0b1));
                     mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, (mDataBus >> 7 & 0b1));
-
+*/
                     mCurrentInstruction.temporalData.push_back(mDataBus);
                 }
                 else if (mCurrentInstruction.currentCycle == 2)

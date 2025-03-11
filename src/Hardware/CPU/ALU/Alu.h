@@ -51,10 +51,15 @@ public:
 
     void rotateValue(const bool rotateRight, const bool throughCarry);
 
-    void flipValue(const uint8_t value);
+    void flipRegister(const uint8_t registerId);
 
     void arithmeticAccumulatorOperation(const uint8_t otherValue, const AluOperationType opType);
     void bitOperation(const uint8_t value, uint8_t bitIndex, BitOperationType bitType);
+
+    void setCarryFlag();
+    void complementCarryFlag();
+
+    void decimalAdjustAccumulator();
 
 private:
     void setFlagsAfterOperation(const AluOperationType opType, const bool includeCarryFlag, const bool includeZeroFlag);
