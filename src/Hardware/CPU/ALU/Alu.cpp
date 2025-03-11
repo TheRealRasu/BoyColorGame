@@ -245,25 +245,11 @@ void Alu::setFlagsAfterOperation(const AluOperationType opType, const bool inclu
             break;
         }
         case AluOperationType::logical_and:
-        {
-            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
-            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, true);
-            if (includeCarryFlag) mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, false);
-
-            break;
-        }
         case AluOperationType::logical_xor:
-        {
-            mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
-            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
-            if (includeCarryFlag) mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, false);
-
-            break;
-        }
         case AluOperationType::logical_or:
         {
             mRegisters.setFlagValue(Registers::FlagsPosition::subtraction_flag, false);
-            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, false);
+            mRegisters.setFlagValue(Registers::FlagsPosition::half_carry_flag, opType == AluOperationType::logical_and);
             if (includeCarryFlag) mRegisters.setFlagValue(Registers::FlagsPosition::carry_flag, false);
 
             break;
