@@ -35,14 +35,15 @@ void CpuCore::loadNewInstruction()
     mCurrentInstruction.temporalData.clear();
 
     // get opcode cycles. Undefined instructions lock the CPU
-    try
+    const auto instructionIt = cyclesPerOpcode.find(mDataBus);
+    if (instructionIt != cyclesPerOpcode.cend())
     {
         mCurrentInstruction.instructionCycles = cyclesPerOpcode.at(mDataBus);
     }
-    catch (std::exception&)
+    else
     {
         mCurrentInstruction.instructionCycles = std::numeric_limits<uint8_t>::max();
-    }
+        }
 
     // first cycle is always executed during this method
     mIdu.incrementProgramCounter();
@@ -51,40 +52,30 @@ void CpuCore::loadNewInstruction()
 void CpuCore::executeInstruction()
 {
     const uint8_t operationType = mRegisters.instructionRegister() >> 6;
-    
     if (operationType == 0b00)
     {
         handleZeroZeroInstructionBlock();
-        return;
     }
-
-    if (operationType == 0b01)
+    else if (operationType == 0b01)
     {
         handleZeroOneInstructionBlock();
-        return;
     }
-
-    if (operationType == 0b10)
+    else if (operationType == 0b10)
     {
         handleOneZeroInstructionBlock();
-        return;
     }
-
-    if (operationType == 0b11)
+    else // if (operationType == 0b11)
     {
         handleOneOneInstructionBlock();
-        return;
     }
 }
 
 void CpuCore::handleZeroZeroInstructionBlock()
 {
     const uint8_t instructionCode = mRegisters.instructionRegister();
-
     const uint8_t registerId = (instructionCode >> 3) & 0b111;
-    const uint8_t mainOperand = instructionCode & 0b111;
 
-    switch (mainOperand)
+    switch (instructionCode & 0b111)
     {
         case 0b000: // 0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38 TODO
         {
@@ -564,11 +555,9 @@ void CpuCore::handleOneZeroInstructionBlock() // DONE
 void CpuCore::handleOneOneInstructionBlock()
 {
     const uint8_t instructionCode = mRegisters.instructionRegister();
-
     const uint8_t firstOperand = (instructionCode >> 3) & 0b111;
-    const uint8_t mainOperand = instructionCode & 0b111;
 
-    switch (mainOperand)
+    switch (instructionCode & 0b111)
     {
         case 0b000: // various; TODO
         {
