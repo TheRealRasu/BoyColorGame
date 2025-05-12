@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <thread>
 
 class CpuCore;
 
@@ -14,7 +15,11 @@ public:
     void cpuLoop();
 
     void processInput();
+    void loadRom(const std::string& fileName);
     
 protected:
     std::unique_ptr<CpuCore> mCpuCore;
+
+    bool mTerminate {};
+    std::thread mGameLoopThread;
 };

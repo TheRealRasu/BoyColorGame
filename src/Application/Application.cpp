@@ -17,7 +17,14 @@ void Application::cpuLoop()
 
 void Application::processInput()
 {
-    
-
     // TODO implement opcode handling
+}
+
+void Application::loadRom(const std::string& fileName)
+{
+    // TODO actually load
+    while (mTerminate == false)
+    {
+        cpuLoop();
+    }
 }
