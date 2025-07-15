@@ -10,7 +10,7 @@ Application::Application()
 Application::~Application()
 {}
 
-void Application::cpuLoop()
+void Application::loop()
 {
     mCpuCore->handleCurrentInstruction();
 }
@@ -25,6 +25,6 @@ void Application::loadRom(const std::string& fileName)
     // TODO actually load
     while (mTerminate == false)
     {
-        cpuLoop();
+        loop();
     }
 }

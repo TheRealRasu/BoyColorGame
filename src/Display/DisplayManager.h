@@ -20,6 +20,8 @@ public:
 
     void renderImage();
 
+    void reset();
+
 private:
     struct SdlWindowDtor
     {

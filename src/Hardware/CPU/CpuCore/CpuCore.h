@@ -30,6 +30,8 @@ public:
     void loadNewInstruction();
     void handleCurrentInstruction();
 
+    void reset();
+
 private:
     // methods for instructions
     void executeInstruction();

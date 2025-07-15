@@ -12,11 +12,12 @@ public:
     Application();
     ~Application();
 
-    void cpuLoop();
+    void loop();
 
     void processInput();
     void loadRom(const std::string& fileName);
     
+    void resetSystem();
 protected:
     std::unique_ptr<CpuCore> mCpuCore;
 

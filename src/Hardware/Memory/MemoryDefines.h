@@ -2,6 +2,10 @@
 
 #include <cstdint>
 
+static constexpr uint16_t bootRomByte = 0xFF50;
+
+static constexpr uint16_t cartridgetRomStart = 0x0100;
+
 static constexpr uint16_t romBankSize = 0x4000;
 static constexpr uint8_t romBankCount = 128;
 

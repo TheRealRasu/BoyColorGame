@@ -25,3 +25,8 @@ void DisplayManager::renderImage()
 {
 
 }
+
+void DisplayManager::reset()
+{
+    
+}
