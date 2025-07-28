@@ -1,10 +1,11 @@
 #include "Application/Application.h"
 
 #include <cstdlib>
+#include <thread>
 
 bool gTerminate = false;
 
-int main(char argc, char** argv)
+int main(int argc, char** argv)
 {
     if (argc != 2) return EXIT_FAILURE;
 
@@ -12,13 +13,13 @@ int main(char argc, char** argv)
     
     while (!gTerminate)
     {
-        application.cpuLoop();
+        application.loop();
     }
 
     if (false) // TODO game loaded
     {
         const std::string gamePath = "foo";
-        std::thread gameThread = std::thread(&Application::loadRom, application, gamePath);
+        std::thread gameThread = std::thread(&Application::loadRom, &application, gamePath);
     }
 
     return EXIT_SUCCESS;
