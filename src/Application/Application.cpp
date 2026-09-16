@@ -1,10 +1,12 @@
 #include "Application.h"
 
 #include "../Hardware/CPU/CpuCore/CpuCore.h"
+#include "../Hardware/Memory/MemoryManager.h"
 
 Application::Application()
 {
     mCpuCore = std::make_unique<CpuCore>();
+    mMemoryManager = std::make_unique<MemoryManager>();
 }
 
 Application::~Application()
@@ -27,4 +29,10 @@ void Application::loadRom(const std::string& fileName)
     {
         loop();
     }
+}
+
+void Application::resetSystem()
+{
+    mMemoryManager->resetMemory();
+    mCpuCore->reset();
 }

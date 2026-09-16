@@ -21,7 +21,7 @@ void Idu::increaseValue(const uint16_t givenValue)
 
 void Idu::decreaseValue(const uint16_t givenValue)
 {
-    mMemory = givenValue -1 ;
+    mMemory = givenValue -1;
 }
 
 void Idu::assignValue(const uint16_t value)

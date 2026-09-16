@@ -5,9 +5,6 @@
 class Registers
 {
 public:
-    Registers();
-    ~Registers();
-
     enum class FlagCondition : uint8_t
     {
         condition_nz = 0b000,
@@ -51,7 +48,7 @@ public:
     uint8_t accumulator() const;
     uint8_t instructionRegister() const;
 
-    bool flagValue(FlagsPosition pos) const;
+    bool flagValue(const FlagsPosition pos) const;
 
     uint8_t smallRegisterValue(const uint8_t identifier) const;
     uint16_t bigRegisterValue(const BigRegisterIdentifier identifier) const;
@@ -63,13 +60,15 @@ public:
     void setInstructionRegister(const uint8_t instruction);
     void setInterruptEnable(const uint8_t newValue);
 
-    void setFlagValue(FlagsPosition pos, bool value);
+    void setFlagValue(const FlagsPosition pos, const bool value);
 
     void setSmallRegister(const uint8_t identifier, const uint8_t value);
     void setBigRegister(const BigRegisterIdentifier identifier, const uint16_t value);
 
+    void reset();
+
     // misc.
-    bool checkFlagCondition(FlagCondition condition) const;
+    bool checkFlagCondition(const FlagCondition condition) const;
     static Registers::BigRegisterIdentifier instructionToBigRegisterId(const uint8_t instructionCode);
 
 protected:

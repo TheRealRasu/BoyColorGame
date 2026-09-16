@@ -16,6 +16,6 @@ public:
 
 protected:
     std::vector<uint8_t> mHighRam; // 127 B of RAM, directly connected to the CPU
-    std::vector<uint8_t> mVideoRam; // 16 KB, directly connected to the CPU (for GBC)
-    std::vector<uint8_t> mWorkRam; // 32 KB
+    std::vector<uint8_t> mVideoRam; // 16 KB, directly connected to the CPU (for GBC). 2*8 KiB
+    std::vector<uint8_t> mWorkRam; // 32 KiB, 4KiB + 7*4 KiB
 };

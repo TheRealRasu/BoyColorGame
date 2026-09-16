@@ -1,11 +1,5 @@
 #include "Registers.h"
 
-Registers::Registers()
-{}
-
-Registers::~Registers()
-{}
-
 uint16_t Registers::stackPointer() const
 {
     return mStackPointer;
@@ -26,7 +20,7 @@ uint8_t Registers::instructionRegister() const
     return mInstructionRegister;
 }
 
-bool Registers::flagValue(FlagsPosition pos) const
+bool Registers::flagValue(const FlagsPosition pos) const
 {
     return (mFlagsRegister >> static_cast<uint8_t>(pos)) & 0b1;
 }
@@ -102,7 +96,7 @@ void Registers::setInterruptEnable(const uint8_t newValue)
     mInterruptEnable = newValue;
 }
 
-void Registers::setFlagValue(FlagsPosition pos, bool value)
+void Registers::setFlagValue(const FlagsPosition pos, const bool value)
 {
     const uint8_t flagValue = value << static_cast<uint8_t>(pos);
 
@@ -194,7 +188,26 @@ void Registers::setBigRegister(const BigRegisterIdentifier identifier, const uin
     }
 }
 
-bool Registers::checkFlagCondition(FlagCondition condition) const
+void Registers::reset()
+{
+    mInstructionRegister = {};
+    // mInterruptEnable = {};
+
+    mAccumulator = {};
+    mFlagsRegister = {};
+
+    mBRegister = {};
+    mCRegister = {};
+    mDRegister = {};
+    mERegister = {};
+    mHRegister = {};
+    mLRegister = {};
+
+    mProgramCounter = {};
+    mStackPointer = {};
+}
+
+bool Registers::checkFlagCondition(const FlagCondition condition) const
 {
     switch (condition)
     {

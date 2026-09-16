@@ -6,6 +6,7 @@
 #include <thread>
 
 class CpuCore;
+class MemoryManager;
 
 class Application
 {
@@ -19,8 +20,10 @@ public:
     void loadRom(const std::string& fileName);
     
     void resetSystem();
+    
 protected:
     std::unique_ptr<CpuCore> mCpuCore;
+    std::unique_ptr<MemoryManager> mMemoryManager;
 
     bool mTerminate {};
     std::thread mGameLoopThread;
