@@ -3,24 +3,11 @@
 #include "../OpcodeCycleMap.h"
 
 #include <cstdint>
-#include <limits>
 
 CpuCore::CpuCore()
     : mAlu(mRegisters),
       mIdu(mRegisters)
 {}
-
-void CpuCore::handleCurrentInstruction()
-{
-    const bool getNewInstruction = (mCurrentInstruction.instructionCycles == 0 || mCurrentInstruction.instructionCycles == mCurrentInstruction.currentCycle);
-
-    if (!getNewInstruction) executeInstruction();
-
-    if ((++mCurrentInstruction.currentCycle == mCurrentInstruction.instructionCycles) || getNewInstruction)
-    {
-        loadNewInstruction();
-    }
-}
 
 void CpuCore::loadNewInstruction()
 {
@@ -30,23 +17,34 @@ void CpuCore::loadNewInstruction()
     mRegisters.setInstructionRegister(mDataBus);
     
     // reset Instruction struct
-    mCurrentInstruction.currentCycle = 0;
-    mCurrentInstruction.conditionMet = false;
-    mCurrentInstruction.temporalData.clear();
+    mCurrentInstruction = {};
 
     // get opcode cycles. Undefined instructions lock the CPU
-    const auto instructionIt = cyclesPerOpcode.find(mDataBus);
-    if (instructionIt != cyclesPerOpcode.cend())
+    if (cyclesPerOpcode.find(mDataBus) != cyclesPerOpcode.cend())
     {
         mCurrentInstruction.instructionCycles = cyclesPerOpcode.at(mDataBus);
     }
-    else
-    {
-        mCurrentInstruction.instructionCycles = std::numeric_limits<uint8_t>::max();
-        }
 
     // first cycle is always executed during this method
     mIdu.incrementProgramCounter();
+}
+
+void CpuCore::handleCurrentInstruction()
+{
+    mTimers.update();
+    const bool getNewInstruction = (mCurrentInstruction.instructionCycles == 0 || mCurrentInstruction.currentCycle == mCurrentInstruction.instructionCycles);
+
+    if (!getNewInstruction) executeInstruction();
+
+    if ((++mCurrentInstruction.currentCycle == mCurrentInstruction.instructionCycles) || getNewInstruction)
+    {
+        loadNewInstruction();
+    }
+}
+
+void CpuCore::reset()
+{
+    // mRegister
 }
 
 void CpuCore::executeInstruction()

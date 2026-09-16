@@ -1,9 +1,11 @@
 #pragma once
 
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <vector>
 
+#include "../Timers.h"
 #include "../../Memory/MemoryManager.h"
 
 #include "../ALU/Alu.h"
@@ -19,7 +21,7 @@ public:
 
     struct Instruction
     {
-        uint8_t instructionCycles {};
+        uint8_t instructionCycles { std::numeric_limits<uint8_t>::max() };
         uint8_t currentCycle {};
 
         std::vector<uint8_t> temporalData {};
@@ -52,6 +54,7 @@ private:
     Alu mAlu;
     Idu mIdu;
     MemoryManager mMemoryManager;
+    Timers mTimers;
 
     Instruction mCurrentInstruction {};
 
