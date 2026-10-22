@@ -7,11 +7,6 @@ Timers::Timers()
 
 }
 
-Timers::~Timers()
-{
-
-}
-
 bool Timers::timerOverflow() const
 {
     return mTickCycles == 0;
@@ -25,6 +20,7 @@ bool Timers::counterOverflow() const
 bool Timers::newFrame() const
 {
     // return
+    return false;
 }
 
 void Timers::startTimer()
